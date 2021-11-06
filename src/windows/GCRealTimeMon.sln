@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GCRealTimeMon", "GCRealTimeMon.csproj", "{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Debug|x64.ActiveCfg = Debug|x64
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Debug|x64.Build.0 = Debug|x64
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Release|x64.ActiveCfg = Release|x64
+		{C816D5D9-38DF-44BC-8AA9-0059DD3ABD55}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {611F1936-6500-432F-A442-677B16F6ACCF}
+	EndGlobalSection
+EndGlobal
