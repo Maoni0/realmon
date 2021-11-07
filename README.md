@@ -16,13 +16,13 @@ Note: Either the name of the process or the process id must be specified, else a
 ## Example Usage
 
 ```
-C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon 14028
+C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -p 14028
 ```
 
 or
 
 ```
-C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon devenv
+C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -n devenv
 ```
 
 Example output:
@@ -30,7 +30,7 @@ Example output:
 ```
 -------press any key to exit ☺-------
 
-Monitoring process 14028
+Monitoring process with name: devenv and pid: 1932
 
 GC#     index |            type |   gen | pause (ms)
 ----------------------------------------------------

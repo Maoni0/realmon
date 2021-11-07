@@ -27,15 +27,15 @@ namespace realmon
             public int ProcessId { get; set; } = -1;
 
             [Option(shortName: 'm',
-                    longName: "minDurationForGCPauseMs",
+                    longName: "minDurationForGCPauseMSec",
                     Required = false,
                     HelpText = "The minimum duration in Ms for GC Pause Duration. Any GCs below this will not be considered.")]
-            public double? MinDurationForGCPausesMs { get; set; } = null;
+            public double? MinDurationForGCPausesMSec { get; set; } = null;
         }
 
         static TraceEventSession session;
 
-        public static void RealTimeProcessing(string processName, double? minDurationForGCPausesInMs)
+        public static void RealTimeProcessing(string processName, double? minDurationForGCPausesInMSec)
         {
             Process[] processes = Process.GetProcessesByName(processName);
             if (processes.Length == 0)
@@ -45,15 +45,15 @@ namespace realmon
 
             else
             {
-                RealTimeProcessing(processes[0].Id, minDurationForGCPausesInMs);
+                RealTimeProcessing(processes[0].Id, minDurationForGCPausesInMSec);
             }
         }
 
-        public static void RealTimeProcessing(int pid, double? minDurationForGCPausesInMs)
+        public static void RealTimeProcessing(int pid, double? minDurationForGCPausesInMSec)
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
-            Console.WriteLine($"Monitoring process with name: {process.ProcessName} and id: {pid}");
+            Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
             Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10}", "index", "type", "gen", "pause (ms)");
             Console.WriteLine("----------------------------------------------------");
 
@@ -77,8 +77,8 @@ namespace realmon
                             if (p.ProcessID == pid)
                             {
                                 // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
-                                if (!minDurationForGCPausesInMs.HasValue ||
-                                   (minDurationForGCPausesInMs.HasValue && minDurationForGCPausesInMs.Value < gc.PauseDurationMSec))
+                                if (!minDurationForGCPausesInMSec.HasValue ||
+                                   (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                                 {
                                     Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2}",
                                         gc.Number, gc.Type, gc.Generation, gc.PauseDurationMSec);
@@ -110,7 +110,7 @@ namespace realmon
             Parser.Default.ParseArguments<Options>(args)
                   .WithParsed<Options>(o =>
                   {
-                      double? minDurationForGCPauses = o.MinDurationForGCPausesMs;
+                      double? minDurationForGCPauses = o.MinDurationForGCPausesMSec;
 
                       if (o.ProcessId != -1)
                       {
@@ -119,7 +119,7 @@ namespace realmon
 
                       else if (!string.IsNullOrEmpty(o.ProcessName))
                       {
-                          RealTimeProcessing(o.ProcessName, o.MinDurationForGCPausesMs);
+                          RealTimeProcessing(o.ProcessName, o.MinDurationForGCPausesMSec);
                       }
 
                       else
