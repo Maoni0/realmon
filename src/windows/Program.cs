@@ -4,19 +4,56 @@ using Microsoft.Diagnostics.Tracing.Session;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using System.Collections.Generic;
 using System.Threading;
+using CommandLine;
+using System.Diagnostics;
 
 namespace realmon
 {
     class Program
     {
+        public class Options
+        {
+            [Option(shortName: 'n',
+                    longName: "processName",
+                    Required = false,
+                    HelpText = "The process name for which the GC Monitoring will take place for - the first process is chosen if there are multiple.")]
+            public string ProcessName { get; set; } = null;
+
+            [Option(shortName: 'p',
+                    longName: "processId",
+                    Required = false,
+                    HelpText = "The process id for which the GC Monitoring will take place for.")]
+            public int ProcessId { get; set; } = -1;
+
+            [Option(shortName: 'm',
+                    longName: "minDurationForGCPauseMs",
+                    Required = false,
+                    HelpText = "The minimum duration in Ms for GC Pause Duration. Any GCs below this will not be considered.")]
+            public double? MinDurationForGCPausesMs { get; set; } = null;
+        }
+
         static TraceEventSession session;
 
-        public static void RealTimeProcessing(int pid)
+        public static void RealTimeProcessing(string processName, double? minDurationForGCPausesInMs)
+        {
+            Process[] processes = Process.GetProcessesByName(processName);
+            if (processes.Length == 0)
+            {
+                throw new ArgumentException($"No Processes found with name: {processName}");
+            }
+
+            else
+            {
+                RealTimeProcessing(processes[0].Id, minDurationForGCPausesInMs);
+            }
+        }
+
+        public static void RealTimeProcessing(int pid, double? minDurationForGCPausesInMs)
         {
             Console.WriteLine();
-            Console.WriteLine("Monitoring process {0}", pid);
+            Process process = Process.GetProcessById(pid);
+            Console.WriteLine($"Monitoring process with name: {process.ProcessName} and id: {pid}");
             Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10}", "index", "type", "gen", "pause (ms)");
             Console.WriteLine("----------------------------------------------------");
 
@@ -39,8 +76,13 @@ namespace realmon
                         {
                             if (p.ProcessID == pid)
                             {
-                                Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2}",
-                                    gc.Number, gc.Type, gc.Generation, gc.PauseDurationMSec);
+                                // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
+                                if (!minDurationForGCPausesInMs.HasValue ||
+                                   (minDurationForGCPausesInMs.HasValue && minDurationForGCPausesInMs.Value < gc.PauseDurationMSec))
+                                {
+                                    Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2}",
+                                        gc.Number, gc.Type, gc.Generation, gc.PauseDurationMSec);
+                                }
                             }
                         };
                     });
@@ -64,7 +106,27 @@ namespace realmon
             ThreadStart ts = new ThreadStart(RunTest);
             Thread monitorThread = new Thread(ts);
             monitorThread.Start();
-            RealTimeProcessing(int.Parse(args[0]));
+
+            Parser.Default.ParseArguments<Options>(args)
+                  .WithParsed<Options>(o =>
+                  {
+                      double? minDurationForGCPauses = o.MinDurationForGCPausesMs;
+
+                      if (o.ProcessId != -1)
+                      {
+                          RealTimeProcessing(o.ProcessId, minDurationForGCPauses);
+                      }
+
+                      else if (!string.IsNullOrEmpty(o.ProcessName))
+                      {
+                          RealTimeProcessing(o.ProcessName, o.MinDurationForGCPausesMs);
+                      }
+
+                      else
+                      {
+                          throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
+                      }
+                  });
         }
     }
 }
