@@ -31,8 +31,8 @@ Currently it's a VS solution. It uses the TraceEvent library.
 
 Contributions are very welcome! Tasks I'm currently thinking about -
 
-Build with dotnet CLI in addition to a VS solution so folks can use this on Linux.
-More info about GCs (the TraceGC class in TraceEvent provides a ton of info about each GC).
-Take more command line args that allow uses to specify things like process name or only show GCs that are blocking/longer than Xms/etc.
++ Build with dotnet CLI in addition to a VS solution so folks can use this on Linux.
++ More info about GCs (the TraceGC class in TraceEvent provides a ton of info about each GC).
++ Take more command line args that allow uses to specify things like process name or only show GCs that are blocking/longer than Xms/etc.
 
 If you are interested in working on any of these, your contributions are very much appreciated. Or if you have suggestions on other features, feel free to open an issue or a PR. 
