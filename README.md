@@ -1,13 +1,36 @@
 # GCRealTimeMon
 This is a monitoring tool that tells you when GCs happen in a .NET process and characteristics about these GCs.
 
-Right now it's super simple - given a PID it will show you a few things about GCs as they happen in that process -
+Right now it's super simple - given a PID or process name it will show you a few things about GCs as they happen in that process.
+
+## Command Line Arguments
+
+| Command Line Argument | Name | Description |
+|-----|-----|-----|
+| n | Name of the Process | Grabs the first process with the name matching that with the one specified with this argument |
+| p | Process Id | Process Id to monitor GC for |
+| m | Minimum Duration in Ms for GC Pause Duration | Any GC Pauses below this specified value will not be written to the console log - this is an optional argument |
+
+Note: Either the name of the process or the process id must be specified, else an ``ArgumentException`` is thrown.
+
+## Example Usage
 
 ```
-C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon 14028
+C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -p 14028
+```
+
+or
+
+```
+C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -n devenv
+```
+
+Example output:
+
+```
 -------press any key to exit ☺-------
 
-Monitoring process 14028
+Monitoring process with name: devenv and pid: 1932
 
 GC#     index |            type |   gen | pause (ms)
 ----------------------------------------------------
