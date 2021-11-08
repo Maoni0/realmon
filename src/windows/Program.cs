@@ -34,6 +34,9 @@ namespace realmon
         }
 
         static TraceEventSession session;
+        static DateTime lastTraceTime;
+        static TraceGC lastTrace;
+        static object writerLock = new object();
 
         public static void RealTimeProcessing(string processName, double? minDurationForGCPausesInMSec)
         {
@@ -49,13 +52,15 @@ namespace realmon
             }
         }
 
+        private const string LineSeparator = "--------------------------------------------------------------------------------------------------------";
+
         public static void RealTimeProcessing(int pid, double? minDurationForGCPausesInMSec)
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
             Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
-            Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10}", "index", "type", "gen", "pause (ms)");
-            Console.WriteLine("----------------------------------------------------");
+            Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10} | {4,10} | {5,10} | {6, 21} |", "index", "type", "gen", "pause (ms)", "promoted", "gen size", "reason");
+            Console.WriteLine(LineSeparator);
 
             session = new TraceEventSession("MySession");
             {
@@ -80,8 +85,37 @@ namespace realmon
                                 if (!minDurationForGCPausesInMSec.HasValue ||
                                    (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                                 {
-                                    Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2}",
-                                        gc.Number, gc.Type, gc.Generation, gc.PauseDurationMSec);
+                                    lastTraceTime = DateTime.UtcNow;
+                                    lastTrace = gc;
+
+                                    var stats = gc.HeapStats;
+                                    var genPromoted = gc.Generation switch {
+                                        0 => stats.TotalPromotedSize0,
+                                        1 => stats.TotalPromotedSize1,
+                                        2 => stats.TotalPromotedSize2,
+                                        3 => stats.TotalPromotedSize3,
+                                        4 => stats.TotalPromotedSize4,
+                                        _ => 0,
+                                    };
+                                    var genSize = gc.Generation switch {
+                                        0 => stats.GenerationSize0,
+                                        1 => stats.GenerationSize1,
+                                        2 => stats.GenerationSize2,
+                                        3 => stats.GenerationSize3,
+                                        4 => stats.GenerationSize4,
+                                        _ => 0
+                                    };
+
+                                    lock (writerLock) {
+                                        Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2} | {4,10} | {5,10} | {6, 21} |",
+                                            gc.Number, 
+                                            gc.Type, 
+                                            gc.Generation, 
+                                            gc.PauseDurationMSec,
+                                            $"{(genPromoted / 1048576m):N2} MB",
+                                            $"{(genSize / 1048576m):N2} MB",
+                                            gc.Reason);
+                                    }
                                 }
                             }
                         };
@@ -94,10 +128,45 @@ namespace realmon
             }
         }
 
+        private static void PrintLastStats()
+        {
+            if (lastTrace == null)
+            {
+                Console.WriteLine("No stats collected yet.");
+            }
+            else 
+            {
+                var t = lastTrace; // capture, since this could tear
+                var s = t.HeapStats;
+                lock (writerLock)
+                {
+                    Console.WriteLine(LineSeparator);
+                    Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastTraceTime, t.Number, t.Generation);
+                    Console.WriteLine("  Heaps: {0:N0}", t.HeapCount);
+                    Console.WriteLine("  Handles: {0:N0}", s.GCHandleCount);
+                    Console.WriteLine("  Pinned Obj Count: {0:N0}", s.PinnedObjectCount);
+                    Console.WriteLine("  Last Run Stats:");
+                    Console.WriteLine("    Total Heap: {0:N0} Bytes", s.TotalHeapSize);
+                    Console.WriteLine("      Gen 0: {0,17:N0} Bytes", s.GenerationSize0);
+                    Console.WriteLine("      Gen 1: {0,17:N0} Bytes", s.GenerationSize1);
+                    Console.WriteLine("      Gen 2: {0,17:N0} Bytes", s.GenerationSize2);
+                    Console.WriteLine("      Gen 3: {0,17:N0} Bytes", s.GenerationSize3);
+                    Console.WriteLine("      Gen 4: {0,17:N0} Bytes", s.GenerationSize4);
+                    Console.WriteLine(LineSeparator);
+                }
+            }
+        }
+
         static void RunTest()
         {
-            Console.WriteLine("-------press any key to exit {0}-------", (char)1);
-            Console.ReadLine();
+            Console.WriteLine("------- press s for current stats or any other key to exit -------");
+            var k = Console.ReadKey(true);
+
+            while (k.Key == ConsoleKey.S)
+            {
+                PrintLastStats();
+                k = Console.ReadKey(true);
+            }
             session.Dispose();
         }
 
