@@ -52,14 +52,14 @@ namespace realmon
             }
         }
 
-        private const string LineSeparator = "--------------------------------------------------------------------------------------------------------";
+        private const string LineSeparator = "------------------------------------------------------------------------------";
 
         public static void RealTimeProcessing(int pid, double? minDurationForGCPausesInMSec)
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
             Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
-            Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10} | {4,10} | {5,10} | {6, 21} |", "index", "type", "gen", "pause (ms)", "promoted", "gen size", "reason");
+            Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10} | {4, 21} |", "index", "type", "gen", "pause (ms)", "reason");
             Console.WriteLine(LineSeparator);
 
             session = new TraceEventSession("MySession");
@@ -88,32 +88,12 @@ namespace realmon
                                     lastGCTime = DateTime.UtcNow;
                                     lastGC = gc;
 
-                                    var stats = gc.HeapStats;
-                                    var genPromoted = gc.Generation switch {
-                                        0 => stats.TotalPromotedSize0,
-                                        1 => stats.TotalPromotedSize1,
-                                        2 => stats.TotalPromotedSize2,
-                                        3 => stats.TotalPromotedSize3,
-                                        4 => stats.TotalPromotedSize4,
-                                        _ => 0,
-                                    };
-                                    var genSize = gc.Generation switch {
-                                        0 => stats.GenerationSize0,
-                                        1 => stats.GenerationSize1,
-                                        2 => stats.GenerationSize2,
-                                        3 => stats.GenerationSize3,
-                                        4 => stats.GenerationSize4,
-                                        _ => 0
-                                    };
-
                                     lock (writerLock) {
-                                        Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2} | {4,10} | {5,10} | {6, 21} |",
+                                        Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2} | {4, 21} |",
                                             gc.Number, 
                                             gc.Type, 
                                             gc.Generation, 
                                             gc.PauseDurationMSec,
-                                            $"{(genPromoted / 1048576m):N2} MB",
-                                            $"{(genSize / 1048576m):N2} MB",
                                             gc.Reason);
                                     }
                                 }

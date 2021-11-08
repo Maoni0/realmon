@@ -34,22 +34,27 @@ C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -n devenv
 Example output:
 
 ```
--------press any key to exit ☺-------
+------- press s for current stats or any other key to exit -------
 
-Monitoring process with name: devenv and pid: 1932
-
-GC#     index |            type |   gen | pause (ms)
-----------------------------------------------------
-
-GC#       674 | NonConcurrentGC |     1 |       7.24
-GC#       675 | NonConcurrentGC |     1 |      17.29
-GC#       676 | NonConcurrentGC |     1 |       9.33
-GC#       677 | NonConcurrentGC |     1 |      22.98
-GC#       678 | NonConcurrentGC |     1 |      20.00
-GC#       679 | NonConcurrentGC |     1 |      14.12
-GC#       680 | NonConcurrentGC |     1 |      10.58
-GC#       681 | NonConcurrentGC |     1 |       4.94
-GC#       682 | NonConcurrentGC |     1 |      12.43
+Monitoring process with name: Samples.AspNet5 and pid: 45044
+GC#     index |            type |   gen | pause (ms) |                reason |
+------------------------------------------------------------------------------
+GC#         1 | NonConcurrentGC |     0 |       7.45 |            AllocSmall |
+GC#         2 | NonConcurrentGC |     1 |      17.88 |            AllocSmall |
+GC#         3 | NonConcurrentGC |     0 |       3.20 |            AllocSmall |
+------------------------------------------------------------------------------
+Heap Stats as of 2021-11-08 03:15:30Z (Run 1 for gen 0):
+  Heaps: 16
+  Handles: 2,015
+  Pinned Obj Count: 8
+  Last Run Stats:
+    Total Heap: 15,846,992 Bytes
+      Gen 0:               384 Bytes
+      Gen 1:        10,718,432 Bytes
+      Gen 2:               384 Bytes
+      Gen 3:         4,358,056 Bytes
+      Gen 4:           769,736 Bytes
+------------------------------------------------------------------------------
 ```
 
 **Building**
