@@ -9,12 +9,12 @@ namespace realmon.Configuration
     internal static class ConfigurationReader
     {
         /// <summary>
-        /// TODO:
+        /// This method parses the configuration based on the given config path. 
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static async Task<Configuration> ReadConfiguration(string path)
+        public static async Task<Configuration> ReadConfigurationAsync(string path)
         {
             if (string.IsNullOrEmpty(path))
             {

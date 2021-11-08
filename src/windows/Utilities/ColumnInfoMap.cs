@@ -4,6 +4,9 @@ namespace GCRealTimeMon.Utilities
 {
     internal static class ColumnInfoMap
     {
+        /// <summary>
+        /// Map that is a registry of the available columns.
+        /// </summary>
         public static Dictionary<string, ColumnInfo> Map =
             new Dictionary<string, ColumnInfo>
             {
@@ -11,11 +14,11 @@ namespace GCRealTimeMon.Utilities
                 { "index", new ColumnInfo(name: "index",
                                           alignment: 10,
                                           getColumnValueFromEvent: (traceEvent) => traceEvent.Number )},
+
+                // Additional Columns
                 { "type",  new ColumnInfo(name: "type",
                                           alignment: 15,
                                           getColumnValueFromEvent: (traceEvent) => traceEvent.Type )},
-
-                // Optional Columns
                 { "gen", new ColumnInfo(name: "gen",
                                         alignment: 5,
                                         getColumnValueFromEvent: (traceEvent) => traceEvent.Generation )},

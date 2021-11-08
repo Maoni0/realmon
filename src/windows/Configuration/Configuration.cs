@@ -3,22 +3,17 @@
 namespace realmon.Configuration
 {
     /// <summary>
-    /// TODO:
+    /// Class contains the parsed configuration from the YAML config. 
     /// </summary>
     public sealed class Configuration
     {
         /// <summary>
-        /// TODO:
+        /// Columns to display. 
         /// </summary>
         public List<string> Columns { get; set; }
 
         /// <summary>
-        /// TODO:
-        /// </summary>
-        public Dictionary<string, string> StatsMode { get; set; }
-
-        /// <summary>
-        /// TODO:
+        /// All columns available to display. 
         /// </summary>
         public List<string> AvailableColumns { get; set; }
     }

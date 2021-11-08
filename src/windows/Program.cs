@@ -69,7 +69,7 @@ namespace realmon
             double? minDurationForGCPausesInMSec = options.MinDurationForGCPausesMSec;
             Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
-            Console.WriteLine(PrintUtilities.LineSeparator);
+            Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
 
             session = new TraceEventSession("MySession");
             {
@@ -117,7 +117,7 @@ namespace realmon
                 var s = t.HeapStats;
                 lock (writerLock)
                 {
-                    Console.WriteLine(PrintUtilities.LineSeparator);
+                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
                     Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastGCTime, t.Number, t.Generation);
                     Console.WriteLine("  Heaps: {0:N0}", t.HeapCount);
                     Console.WriteLine("  Handles: {0:N0}", s.GCHandleCount);
@@ -129,7 +129,7 @@ namespace realmon
                     Console.WriteLine("      Gen 2: {0,17:N0} Bytes", s.GenerationSize2);
                     Console.WriteLine("      Gen 3: {0,17:N0} Bytes", s.GenerationSize3);
                     Console.WriteLine("      Gen 4: {0,17:N0} Bytes", s.GenerationSize4);
-                    Console.WriteLine(PrintUtilities.LineSeparator);
+                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
                 }
             }
         }
@@ -161,7 +161,7 @@ namespace realmon
                       throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
                   }
 
-                  Configuration.Configuration configuration = await ConfigurationReader.ReadConfiguration(options.PathToConfigurationFile);
+                  Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(options.PathToConfigurationFile);
 
                   if (options.ProcessId != -1)
                   {

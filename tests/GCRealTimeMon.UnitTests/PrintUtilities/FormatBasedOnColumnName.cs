@@ -2,10 +2,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using realmon.Utilities;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace realmon.UnitTests
 {
@@ -17,6 +13,22 @@ namespace realmon.UnitTests
         {
             string resolvedColumn = PrintUtilities.FormatBasedOnColumnName(columnName: "index");
             resolvedColumn.Should().NotBeNullOrEmpty();
+            resolvedColumn.Should().BeEquivalentTo("     index");
+        }
+
+        [TestMethod]
+        public void FormatBasedOnColumnName_TypeColumn_SuccessfullyFormated()
+        {
+            string resolvedColumn = PrintUtilities.FormatBasedOnColumnName(columnName: "type");
+            resolvedColumn.Should().NotBeNullOrEmpty();
+            resolvedColumn.Should().BeEquivalentTo("           type");
+        }
+
+        [TestMethod]
+        public void FormatBasedOnColumnName_UnregistedColumn_Excepted()
+        {
+            Action resolveColumn = () => PrintUtilities.FormatBasedOnColumnName(columnName: "unregistered");
+            resolveColumn.Should().Throw<ArgumentException>();
         }
     }
 }

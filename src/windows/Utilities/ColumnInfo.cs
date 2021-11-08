@@ -4,7 +4,7 @@ using System;
 namespace GCRealTimeMon.Utilities
 {
     /// <summary>
-    /// TODO: Fill this.
+    /// Abstraction representing the column with the presentation details. 
     /// </summary>
     internal sealed class ColumnInfo
     {
