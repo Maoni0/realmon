@@ -13,6 +13,12 @@ Right now it's super simple - given a PID or process name it will show you a few
 
 Note: Either the name of the process or the process id must be specified, else an ``ArgumentException`` is thrown.
 
+## Runtime Keys
+
+| Key | Action |
+|-----|-----|
+| `s` | Prints detailed stats of the last collection and the state of each generation |
+
 ## Example Usage
 
 ```

@@ -34,8 +34,8 @@ namespace realmon
         }
 
         static TraceEventSession session;
-        static DateTime lastTraceTime;
-        static TraceGC lastTrace;
+        static DateTime lastGCTime;
+        static TraceGC lastGC;
         static object writerLock = new object();
 
         public static void RealTimeProcessing(string processName, double? minDurationForGCPausesInMSec)
@@ -85,8 +85,8 @@ namespace realmon
                                 if (!minDurationForGCPausesInMSec.HasValue ||
                                    (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                                 {
-                                    lastTraceTime = DateTime.UtcNow;
-                                    lastTrace = gc;
+                                    lastGCTime = DateTime.UtcNow;
+                                    lastGC = gc;
 
                                     var stats = gc.HeapStats;
                                     var genPromoted = gc.Generation switch {
@@ -130,18 +130,18 @@ namespace realmon
 
         private static void PrintLastStats()
         {
-            if (lastTrace == null)
+            if (lastGC == null)
             {
                 Console.WriteLine("No stats collected yet.");
             }
             else 
             {
-                var t = lastTrace; // capture, since this could tear
+                var t = lastGC; // capture, since this could tear
                 var s = t.HeapStats;
                 lock (writerLock)
                 {
                     Console.WriteLine(LineSeparator);
-                    Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastTraceTime, t.Number, t.Generation);
+                    Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastGCTime, t.Number, t.Generation);
                     Console.WriteLine("  Heaps: {0:N0}", t.HeapCount);
                     Console.WriteLine("  Handles: {0:N0}", s.GCHandleCount);
                     Console.WriteLine("  Pinned Obj Count: {0:N0}", s.PinnedObjectCount);
