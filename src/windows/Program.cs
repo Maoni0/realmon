@@ -69,7 +69,7 @@ namespace realmon
             double? minDurationForGCPausesInMSec = options.MinDurationForGCPausesMSec;
             Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
-            Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
+            Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
             session = new TraceEventSession("MySession");
             {
