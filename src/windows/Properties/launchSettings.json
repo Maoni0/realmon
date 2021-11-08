@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GCRealTimeMon": {
+      "commandName": "Project",
+      "commandLineArgs": "-n devenv"
+    }
+  }
+}
