@@ -3,11 +3,7 @@
     - type
     - gen
     - pause (ms)
-
-#TODO: Add once implemented:
-# stats_mode:
-# could be manual which means it'll only show if you press s, or timer and you can specify the interval
-#    timer_in_seconds: 5
+    - reason
 
 available_columns:
     # all columns available - could be many here since TraceGC exposes lots of stuff
