@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <TrimMode>Link</TrimMode>
+    <TrimmerDefaultAction>Link</TrimmerDefaultAction>
+    <IlcTrimMetadata>true</IlcTrimMetadata>
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+    <RdXmlFile Include="rd.xml" />
+  </ItemGroup>
+</Project>
