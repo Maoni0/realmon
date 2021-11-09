@@ -19,7 +19,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestConfigurations\Default.yaml">
+    <None Update="ConfigurationReader\TestConfigurations\NoAvailableColumns.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ConfigurationReader\TestConfigurations\UnregisteredAvailableColumns.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ConfigurationReader\TestConfigurations\UnregisteredColumns.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ConfigurationReader\TestConfigurations\NoColumns.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="ConfigurationReader\TestConfigurations\Default.yaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

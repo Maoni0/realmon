@@ -1,8 +1,8 @@
 ﻿columns:
     # optional columns to add. The default one is always: `index` or GC#.
-    - type
     - gen
-    - pause (ms)
+    - unregistered1 
+    - unregistered2 
     - reason
 
 available_columns:

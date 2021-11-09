@@ -1,0 +1,13 @@
+﻿columns:
+    # optional columns to add. The default one is always: `index` or GC#.
+    - type
+    - gen 
+    - pause (ms)
+    - reason
+
+available_columns:
+    # all columns available - could be many here since TraceGC exposes lots of stuff
+    - gen
+    - type
+    - pause (ms)
+    - reason

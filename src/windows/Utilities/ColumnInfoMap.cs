@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace GCRealTimeMon.Utilities
+namespace realmon.Utilities
 {
     internal static class ColumnInfoMap
     {

@@ -1,5 +1,4 @@
-﻿using GCRealTimeMon.Utilities;
-using Microsoft.Diagnostics.Tracing.Analysis.GC;
+﻿using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using System;
 using System.Linq;
 using System.Text;
