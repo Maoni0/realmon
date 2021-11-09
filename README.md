@@ -10,6 +10,7 @@ Right now it's super simple - given a PID or process name it will show you a few
 | n | Name of the Process | Grabs the first process with the name matching that with the one specified with this argument |
 | p | Process Id | Process Id to monitor GC for |
 | m | Minimum Duration in Ms for GC Pause Duration | Any GC Pauses below this specified value will not be written to the console log - this is an optional argument |
+| c | Path of the Configuration File | Path to the configuration file used by the monitor. This file is a YAML file. By default, it's the Default.yaml file is loaded | 
 
 Note: Either the name of the process or the process id must be specified, else an ``ArgumentException`` is thrown.
 
@@ -56,6 +57,39 @@ Heap Stats as of 2021-11-08 03:15:30Z (Run 1 for gen 0):
       Gen 4:           769,736 Bytes
 ------------------------------------------------------------------------------
 ```
+
+## Configuration
+
+The configuration file is a YAML based file currently with the following sections:
+- __columns__: The columns to display. 
+- __available_columns__: All columns that are available to display.
+
+Currently, the available columns are:
+
+| Column Name | Full Name | Trace Event Property |
+|-----|-----|-----|
+| index | The GC Number | ``TraceGC.Number``
+| gen | The Generation | ``TraceGC.Generation``  
+| type | The Type of GC | ``TraceGC.Type`` 
+| pause (ms) | Pause Duration in Msc | ``TraceGC.PauseDurationMSec``
+| reason | Reason for GC | ``TraceGC.Reason`` 
+
+## Unit Tests
+
+The unit tests are in the ``test`` directory.
+
+## Adding New Columns
+
+The process to add a new column from the ``TraceGC`` event is the following:
+
+1. Include the column name in the ``available_columns`` in the Default.yaml config.
+2. Define a ``ColumnInfo`` object in the ``ColumnInfoMap`` with the following properties:
+   1. The name
+   2. Alignment
+   3. A ``Func<TraceGC, object>`` that looks up an object in via a ``TraceGC`` event.
+   4. Format (optional)
+3. Optionally add corresponding unit tests.
+4. Update the documentation here with the new column.
 
 **Building**
 

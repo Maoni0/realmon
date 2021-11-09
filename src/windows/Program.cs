@@ -7,6 +7,9 @@ using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using System.Threading;
 using CommandLine;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using realmon.Configuration;
+using realmon.Utilities;
 
 namespace realmon
 {
@@ -31,6 +34,12 @@ namespace realmon
                     Required = false,
                     HelpText = "The minimum duration in Ms for GC Pause Duration. Any GCs below this will not be considered.")]
             public double? MinDurationForGCPausesMSec { get; set; } = null;
+
+            [Option(shortName: 'c',
+                    longName: "configPath",
+                    Required = false,
+                    HelpText = "The path to the YAML configuration file that is read in.")]
+            public string PathToConfigurationFile { get; set; } = "./DefaultConfig.yaml";
         }
 
         static TraceEventSession session;
@@ -38,29 +47,29 @@ namespace realmon
         static TraceGC lastGC;
         static object writerLock = new object();
 
-        public static void RealTimeProcessing(string processName, double? minDurationForGCPausesInMSec)
+        public static void RealTimeProcessingByProcessName(Options options, Configuration.Configuration configuration)
         {
-            Process[] processes = Process.GetProcessesByName(processName);
+            Process[] processes = Process.GetProcessesByName(options.ProcessName);
             if (processes.Length == 0)
             {
-                throw new ArgumentException($"No Processes found with name: {processName}");
+                throw new ArgumentException($"No Processes found with name: {options.ProcessName}");
             }
 
             else
             {
-                RealTimeProcessing(processes[0].Id, minDurationForGCPausesInMSec);
+                RealTimeProcessingByProcessId(processes[0].Id, options, configuration);
             }
         }
 
-        private const string LineSeparator = "------------------------------------------------------------------------------";
 
-        public static void RealTimeProcessing(int pid, double? minDurationForGCPausesInMSec)
+        public static void RealTimeProcessingByProcessId(int pid, Options options, Configuration.Configuration configuration)
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
+            double? minDurationForGCPausesInMSec = options.MinDurationForGCPausesMSec;
             Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
-            Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10} | {4, 21} |", "index", "type", "gen", "pause (ms)", "reason");
-            Console.WriteLine(LineSeparator);
+            Console.WriteLine(PrintUtilities.GetHeader(configuration));
+            Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
             session = new TraceEventSession("MySession");
             {
@@ -70,13 +79,6 @@ namespace realmon
                 {
                     proc.AddCallbackOnDotNetRuntimeLoad(delegate (TraceLoadedDotNetRuntime runtime)
                     {
-                        runtime.GCStart += delegate (TraceProcess p, TraceGC gc)
-                        {
-                            if (p.ProcessID == pid)
-                            {
-                                //Console.WriteLine("GC#{0:5} {1} gen{2} start at {3:10.00}ms", gc.Number, gc.Type, gc.Generation, gc.PauseStartRelativeMSec);
-                            }
-                        };
                         runtime.GCEnd += delegate (TraceProcess p, TraceGC gc)
                         {
                             if (p.ProcessID == pid)
@@ -89,12 +91,7 @@ namespace realmon
                                     lastGC = gc;
 
                                     lock (writerLock) {
-                                        Console.WriteLine("GC#{0,10} | {1,15} | {2,5} | {3,10:N2} | {4, 21} |",
-                                            gc.Number, 
-                                            gc.Type, 
-                                            gc.Generation, 
-                                            gc.PauseDurationMSec,
-                                            gc.Reason);
+                                        Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
                                     }
                                 }
                             }
@@ -120,7 +117,7 @@ namespace realmon
                 var s = t.HeapStats;
                 lock (writerLock)
                 {
-                    Console.WriteLine(LineSeparator);
+                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
                     Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastGCTime, t.Number, t.Generation);
                     Console.WriteLine("  Heaps: {0:N0}", t.HeapCount);
                     Console.WriteLine("  Handles: {0:N0}", s.GCHandleCount);
@@ -132,7 +129,7 @@ namespace realmon
                     Console.WriteLine("      Gen 2: {0,17:N0} Bytes", s.GenerationSize2);
                     Console.WriteLine("      Gen 3: {0,17:N0} Bytes", s.GenerationSize3);
                     Console.WriteLine("      Gen 4: {0,17:N0} Bytes", s.GenerationSize4);
-                    Console.WriteLine(LineSeparator);
+                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
                 }
             }
         }
@@ -150,32 +147,33 @@ namespace realmon
             session.Dispose();
         }
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             ThreadStart ts = new ThreadStart(RunTest);
             Thread monitorThread = new Thread(ts);
             monitorThread.Start();
 
-            Parser.Default.ParseArguments<Options>(args)
-                  .WithParsed<Options>(o =>
+            await Parser.Default.ParseArguments<Options>(args)
+              .MapResult(async options =>
+              {
+                  if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                   {
-                      double? minDurationForGCPauses = o.MinDurationForGCPausesMSec;
+                      throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
+                  }
 
-                      if (o.ProcessId != -1)
-                      {
-                          RealTimeProcessing(o.ProcessId, minDurationForGCPauses);
-                      }
+                  Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(options.PathToConfigurationFile);
 
-                      else if (!string.IsNullOrEmpty(o.ProcessName))
-                      {
-                          RealTimeProcessing(o.ProcessName, o.MinDurationForGCPausesMSec);
-                      }
+                  if (options.ProcessId != -1)
+                  {
+                      RealTimeProcessingByProcessId(options.ProcessId, options, configuration);
+                  }
 
-                      else
-                      {
-                          throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
-                      }
-                  });
+                  else if (!string.IsNullOrEmpty(options.ProcessName))
+                  {
+                      RealTimeProcessingByProcessName(options, configuration);
+                  }
+              },
+              errors => Task.FromResult(errors));
         }
     }
 }

@@ -1,0 +1,13 @@
+﻿columns:
+    # optional columns to add. The default one is always: `index` or GC#.
+    - type
+    - gen
+    - pause (ms)
+    - reason
+
+available_columns:
+    # all columns available - could be many here since TraceGC exposes lots of stuff
+    - gen        # Number of Generation
+    - type       # Type of GC
+    - pause (ms) # GC Pause Time in MSec  
+    - reason     # GC Reason
