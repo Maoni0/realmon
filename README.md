@@ -66,17 +66,35 @@ The configuration file is a YAML based file currently with the following section
 
 Currently, the available columns are:
 
-| Column Name | Full Name | Trace Event Property |
-|-----|-----|-----|
-| index | The GC Number | ``TraceGC.Number``
-| gen | The Generation | ``TraceGC.Generation``  
-| type | The Type of GC | ``TraceGC.Type`` 
-| pause (ms) | Pause Duration in Msc | ``TraceGC.PauseDurationMSec``
-| reason | Reason for GC | ``TraceGC.Reason`` 
-
-## Unit Tests
-
-The unit tests are in the ``test`` directory.
+| Column Name            | Full Name / Description                                                                                                                                                         | Trace Event Property                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| index | The GC Index. | ``TraceGC.Number``
+| gen | The Generation. | ``TraceGC.Generation``
+| type | The Type of GC. | ``TraceGC.Type``
+| reason | Reason for GC. | ``TraceGC.Reason``
+| suspension time (ms)   | The time in milliseconds that it took to suspend all threads to start this GC. For background GCs, we pause multiple times, so this value may be higher than for foreground GCs. | `TraceGC.SuspendDurationMSec`                                                             |
+| pause time (%)           | The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap. For background GCs this is small.                                   | `TraceGC.PauseTimePercentageSinceLastGC`                                                  |
+| CPU time (%)             | Since the last GC, the GC CPU time divided by the total Process CPU time expressed as a percentage.                                                                              | `TraceGC.PercentTimeInGC`                                                                 |
+| gen0 alloc (mb)        | Amount allocated in Gen0 since the last GC occurred in MB.                                                                                                                       | `TraceGC.UserAllocated[(int)Gens.Gen0]`                                                   |
+| gen0 alloc rate        | The average allocation rate since the last GC.                                                                                                                                   | `(TraceGC.UserAllocated[(int)Gens.Gen0] * 1000.0) / TraceGC.DurationSinceLastRestartMSec` |
+| peak size (mb)         | The size on entry of this GC (includes fragmentation) in MB.                                                                                                                     | `TraceGC.HeapSizePeakMB`                                                                  |
+| after size (mb)        | The size on exit of thi sGC (includes fragmentation) in MB.                                                                                                                      | `TraceGC.HeapSizeAfterMB`                                                                 |
+| peak/after             | Peak / After                                                                                                                                                                    | `TraceGC.HeapSizePeakMB / TraceGC.HeapSizeAfterMB`                                        |
+| promoted (mb)          | Memory this GC promoted in MB.                                                                                                                                                   | `TraceGC.PromotedMB`                                                                      |
+| gen0 size (mb)         | Size of gen0 at the end of this GC in MB.                                                                                                                                        | `TraceGC.GenSizeAfterMB(Gens.Gen0)`                                                       |
+| gen0 survival rate     | The % of objects in Gen0 that survived this GC.                                                                                                                                 | `TraceGC.SurvivalPercent(Gens.Gen0)`                                                      |
+| gen0 frag ratio        | The % of fragmentation on Gen0 at the end of this GC.                                                                                                                            | `TraceGC.GenFragmentationPercent(Gens.Gen0)`                                              |
+| gen1 size (mb)         | Size of gen1 at the end of this GC in MB.                                                                                                                                        | `TraceGC.GenSizeAfterMB(Gens.Gen1)`                                                       |
+| gen1 survival rate     | The % of objects in Gen1 that survived this GC. Only available if we are doing a gen1 GC.                                                                                       | `TraceGC.SurvivalPercent(Gens.Gen1)`                                                      |
+| gen1 frag ratio        | The % of fragmentation on Gen1 at the end of this GC.                                                                                                                            | `TraceGC.GenFragmentationPercent(Gens.Gen1)`                                              |
+| gen2 size (mb)         | Size of Gen2 in MB at the end of this GC.                                                                                                                                       | `TraceGC.GenSizeAfterMB(Gens.Gen2)`                                                       |
+| gen2 survival rate     | The % of objects in Gen2 that survived this GC. Only available if we are doing a gen2 GC.                                                                                       | `TraceGC.SurvivalPercent(Gens.Gen2)`                                                      |
+| gen2 frag ratio        | The % of fragmentation on Gen2 at the end of this GC.                                                                                                                            | `TraceGC.GenFragmentationPercent(Gens.Gen2)`                                              |
+| LOH size (mb)          | Size of Large object heap (LOH) at the end of this GC in MB.                                                                                                                     | `TraceGC.GenSizeAfterMB(Gens.LargeObj)`                                                   |
+| LOH survival rate      | The % of objects in the large object heap (LOH) that survived the GC. Only available if we are doing a gen2 GC.                                                                  | `TraceGC.SurvivalPercent(Gens.LargeObj)`                                                  |
+| LOH frag ratio         | The % of fragmentation on the large object heap (LOH) at the end of this GC.                                                                                                     | `TraceGC.GenFragmentationPercent(Gens.LargeObj)`                                          |
+| finalize promoted (mb) | The size of finalizable objects that were discovered to be dead and so promoted during this GC, in MB.                                                                           | `TraceGC.HeapStats.FinalizationPromotedSize / 1000000.0`                                  |
+| pinned objects         | Number of pinned objects observed in this GC.                                                                                                                                    | `TraceGC.HeapStats.PinnedObjectCount`                                                     |
 
 ## Adding New Columns
 
@@ -90,6 +108,14 @@ The process to add a new column from the ``TraceGC`` event is the following:
    4. Format (optional)
 3. Optionally add corresponding unit tests.
 4. Update the documentation here with the new column.
+
+## Unit Tests
+
+The unit tests are in the ``test`` directory and can be run by:
+
+```
+dotnet test
+```
 
 **Building**
 

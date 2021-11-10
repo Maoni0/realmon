@@ -1,13 +1,45 @@
 ﻿columns:
     # optional columns to add. The default one is always: `index` or GC#.
+    # to add a column, add it from the ``available_columns`` section.
     - type
-    - gen 
+    - gen
     - pause (ms)
     - reason
+    - gen0 size (mb) 
+    - LOH size (mb) 
+    - finalize promoted (mb) 
 
 available_columns:
-    # all columns available - could be many here since TraceGC exposes lots of stuff
-    - gen
-    - type
-    - pause (ms)
-    - reason
+    # all columns available to be displayed.
+    - gen                                 # The Generation.
+    - type                                # Type of GC.
+    - pause (ms)                          # The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap. For background GCs this is small.
+    - reason                              # Reason for GC.
+    - suspension time (ms)                # The time in milliseconds that it took to suspend all threads to start this GC. For background GCs, we pause multiple times, so this value may be higher than for foreground GCs. 
+    - pause time (%)                      # The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap. For background GCs this is small. 
+    - CPU time (%)                        # Since the last GC, the GC CPU time divided by the total Process CPU time expressed as a percentage. 
+    - gen0 alloc (mb)                     # Amount allocated in Gen0 since the last GC occurred in MB. 
+    - gen0 alloc rate                     # The average allocation rate since the last GC.
+    - peak size (mb)                      # The size on entry of this GC (includes fragmentation) in MB. 
+    - after size (mb)                     # The size on exit of this GC (includes fragmentation) in MB. 
+    - peak/after                          # Peak / After.
+    - promoted (mb)                       # Memory this GC promoted.
+    # Gen0
+    - gen0 size (mb)                      # Size of gen0 at the end of this GC in MB. 
+    - gen0 survival rate                  # The % of objects in Gen0 that survived this GC.
+    - gen0 frag ratio                     # The % of fragmentation on Gen0 at the end of this GC. 
+    # Gen1
+    - gen1 size (mb)                      # Size of gen1 at the end of this GC in MB.
+    - gen1 survival rate                  # The % of objects in Gen1 that survived this GC. Only available if we are doing a gen1 GC.
+    - gen1 frag ratio                     # The % of fragmentation on Gen1 at the end of this GC. 
+    # Gen 2
+    - gen2 size (mb)                      # Size of Gen2 at the end of this GC in MB.
+    - gen2 survival rate                  # The % of objects in Gen2 that survived this GC. Only available if we are doing a gen2 GC.
+    - gen2 frag ratio                     # The % of fragmentation on Gen2 at the end of this GC. 
+    # LOH
+    - LOH size (mb)                       # Size of Large object heap (LOH) at the end of this GC in MB. 
+    - LOH survival rate                   # The % of objects in the large object heap (LOH) that survived the GC. Only available if we are doing a gen2 GC. 
+    - LOH frag ratio                      # The % of fragmentation on the large object heap (LOH) at the end of this GC. 
+    # Finalized and Pinned
+    - finalize promoted (mb)              # The size of finalizable objects that were discovered to be dead and so promoted during this GC, in MB. 
+    - pinned objects                      # Number of pinned objects this GC promoted.
