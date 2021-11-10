@@ -8,10 +8,14 @@ namespace realmon.Utilities
     /// </summary>
     internal sealed class ColumnInfo
     {
-        public ColumnInfo(string name, int alignment, Func<TraceGC, object> getColumnValueFromEvent, string format = "")
+        public ColumnInfo(string name,
+                          Func<TraceGC, object> getColumnValueFromEvent,
+                          int? alignment = null,
+                          string format = "")
         {
             Name = name;
-            Alignment = alignment;
+            // If no alignment is specified, default to the length of the name.
+            Alignment = alignment ?? Name.Length;
             GetColumnValueFromEvent = getColumnValueFromEvent;
             Format = format;
         }
