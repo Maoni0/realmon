@@ -74,8 +74,8 @@ Currently, the available columns are:
 | pause (ms) | The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap.  For background GCs this is small. | ``TraceGC.PauseDurationMSec``
 | reason | Reason for GC. | ``TraceGC.Reason``
 | suspension time (ms) | The time in milliseconds that it took to suspend all threads to start this GC.  For background GCs, we pause multiple times, so this value may be higher than for foreground GCs. | ``TraceGC.SuspendDurationMSec``
-| pause time % since last GC | The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap.  For background GCs this is small | ``TraceGC.PauseTimePercentageSinceLastGC``
-| percent time in GC | Since the last GC, GC pause time expressed as a percentage of total process time.  For background GC, this includes the pause time for foreground GCs that occur during the background GC.| ``TraceGC.PercentTimeInGC``
+| pause time % since last GC | Since the last GC, GC pause time expressed as a percentage of total process time.  For background GC, this includes the pause time for foreground GCs that occur during the background GC. | ``TraceGC.PauseTimePercentageSinceLastGC``
+| percent time in GC | Since the last GC, the GC CPU time divided by the total Process CPU time expressed as a percentage.| ``TraceGC.PercentTimeInGC``
 | amount allocated in gen 0 | Amount allocated since the last GC occurred. | ``TraceGC.UserAllocated[(int)Gens.Gen0]``
 | gen0 allocation rate | The average allocation rate since the last GC. | ``(TraceGC.UserAllocated[(int)Gens.Gen0] * 1000.0) / TraceGC.DurationSinceLastRestartMSec``
 | peak | The peak size of the GC during GC. | ``TraceGC.HeapSizePeakMB``
