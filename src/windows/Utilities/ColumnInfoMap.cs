@@ -19,9 +19,9 @@ namespace realmon.Utilities
         /// <param name="generation"></param>
         internal static void AddGenerateBasedColumns(Gens generation)
         {
-            string gen = generation.ToString().ToLower();
-            Map[$"{gen} size at end of this GC"] =
-                new ColumnInfo(name: $"{gen.ToString().ToLower()} size at end of this GC",
+            string gen = generation != Gens.GenLargeObj ? generation.ToString().ToLower() : "LOH";
+            Map[$"{gen} size (mb)"] =
+                new ColumnInfo(name: $"{gen.ToString().ToLower()} size (mb)",
                                format: "N3",
                                getColumnValueFromEvent: (traceEvent) => traceEvent.GenSizeAfterMB(generation));
             Map[$"{gen} survival rate"] =
@@ -64,41 +64,41 @@ namespace realmon.Utilities
                                                          format: "N3",
                                                          getColumnValueFromEvent: (traceEvent) => traceEvent.SuspendDurationMSec )},
 
-                { "pause time % since last GC", new ColumnInfo(name: "pause time % since last GC",
-                                                               format: "N1",
-                                                               getColumnValueFromEvent: (traceEvent) => traceEvent.PauseTimePercentageSinceLastGC )},
+                { "pause time (%)", new ColumnInfo(name: "pause time (%)", 
+                                                   format: "N1",
+                                                   getColumnValueFromEvent: (traceEvent) => traceEvent.PauseTimePercentageSinceLastGC )},
 
-                { "percent time in GC", new ColumnInfo(name: "percent time in GC",
-                                                    format: "N1",
-                                                    getColumnValueFromEvent: (traceEvent) => traceEvent.PercentTimeInGC )},
+                { "CPU time (%)", new ColumnInfo(name: "CPU time (%)",
+                                                 format: "N1",
+                                                 getColumnValueFromEvent: (traceEvent) => traceEvent.PercentTimeInGC )},
 
-                { "amount allocated in gen 0", new ColumnInfo(name: "amount allocated in gen 0",
-                                                              format: "N3",
-                                                              getColumnValueFromEvent: (traceEvent) => traceEvent.UserAllocated[(int)Gens.Gen0] )},
-                { "gen0 allocation rate", new ColumnInfo(name: "gen0 allocation rate",
-                                                              format: "N2",
-                                                              getColumnValueFromEvent: (traceEvent) =>
-                                                              {
-                                                                  return (traceEvent.UserAllocated[(int)Gens.Gen0] * 1000.0) / traceEvent.DurationSinceLastRestartMSec;
-                                                              })},
-                { "peak", new ColumnInfo(name: "peak",
-                                         format: "N3",
-                                         getColumnValueFromEvent: (traceEvent) => traceEvent.HeapSizePeakMB)},
-                { "size at end of this GC", new ColumnInfo(name: "size at end of this GC",
-                                                           format: "N3",
-                                                           getColumnValueFromEvent: (traceEvent) => traceEvent.HeapSizeAfterMB )},
-                { "ratio of peak/after", new ColumnInfo(name: "ratio of peak/after",
+                { "gen0 alloc (mb)", new ColumnInfo(name: "gen0 alloc (mb)",
+                                                    format: "N3",
+                                                    getColumnValueFromEvent: (traceEvent) => traceEvent.UserAllocated[(int)Gens.Gen0] )},
+                { "gen0 alloc rate", new ColumnInfo(name: "gen0 alloc rate",
+                                                    format: "N2",
+                                                    getColumnValueFromEvent: (traceEvent) =>
+                                                    {
+                                                        return (traceEvent.UserAllocated[(int)Gens.Gen0] * 1000.0) / traceEvent.DurationSinceLastRestartMSec;
+                                                    })},
+                { "peak size (mb)", new ColumnInfo(name: "peak size (mb)",
+                                                   format: "N3",
+                                                   getColumnValueFromEvent: (traceEvent) => traceEvent.HeapSizePeakMB)},
+                { "after size (mb)", new ColumnInfo(name: "after size (mb)",
+                                                    format: "N3",
+                                                    getColumnValueFromEvent: (traceEvent) => traceEvent.HeapSizeAfterMB )},
+                { "peak/after", new ColumnInfo(name: "peak/after",
+                                               format: "N2",
+                                               getColumnValueFromEvent: (traceEvent) => traceEvent.HeapSizePeakMB / traceEvent.HeapSizeAfterMB )},
+                { "promoted (mb)", new ColumnInfo(name: "promoted (mb)",
+                                                  format: "N3",
+                                                  getColumnValueFromEvent: (traceEvent) => traceEvent.PromotedMB )},
+                { "finalize promoted (mb)", new ColumnInfo(name: "finalize promoted (mb)",
                                                            format: "N2",
-                                                           getColumnValueFromEvent: (traceEvent) => traceEvent.HeapSizePeakMB / traceEvent.HeapSizePeakMB )},
-                { "memory this gc promoted", new ColumnInfo(name: "memory this gc promoted",
-                                                           format: "N3",
-                                                           getColumnValueFromEvent: (traceEvent) => traceEvent.PromotedMB )},
-                { "finalize promoted for GC", new ColumnInfo(name: "finalize promoted for this GC",
-                                                                  format: "N2",
-                                                                  getColumnValueFromEvent: (traceEvent) => traceEvent.HeapStats.FinalizationPromotedSize / 1000000.0 )},
-                { "no. of pinned objects for GC", new ColumnInfo(name: "no. of pinned objects for GC",
-                                                                  format: "N0",
-                                                                  getColumnValueFromEvent: (traceEvent) => traceEvent.HeapStats.PinnedObjectCount )},
+                                                           getColumnValueFromEvent: (traceEvent) => traceEvent.HeapStats.FinalizationPromotedSize / 1000000.0 )},
+                { "pinned objects", new ColumnInfo(name: "pinned objects",
+                                                   format: "N0",
+                                                   getColumnValueFromEvent: (traceEvent) => traceEvent.HeapStats.PinnedObjectCount )},
             };
     }
 }
