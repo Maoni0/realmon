@@ -72,7 +72,8 @@ Currently, the available columns are:
 | gen | The Generation. | ``TraceGC.Generation``
 | type | The Type of GC. | ``TraceGC.Type``
 | reason | Reason for GC. | ``TraceGC.Reason``
-| suspension time (ms)   | The time in milliseconds that it took to suspend all threads to start this GC. For background GCs, we pause multiple times, so this value may be higher than for foreground GCs. | `TraceGC.SuspendDurationMSec`                                                             |
+| suspension time (ms)   | The time in milliseconds that it took to suspend all threads to start this GC | `TraceGC.SuspendDurationMSec`                                                             |
+| pause time (ms)   | The time managed threads were paused during this GC, in milliseconds | `TraceGC.PauseDurationMSec`    |
 | pause time (%)           | The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap. For background GCs this is small.                                   | `TraceGC.PauseTimePercentageSinceLastGC`                                                  |
 | CPU time (%)             | Since the last GC, the GC CPU time divided by the total Process CPU time expressed as a percentage.                                                                              | `TraceGC.PercentTimeInGC`                                                                 |
 | gen0 alloc (mb)        | Amount allocated in Gen0 since the last GC occurred in MB.                                                                                                                       | `TraceGC.UserAllocated[(int)Gens.Gen0]`                                                   |
