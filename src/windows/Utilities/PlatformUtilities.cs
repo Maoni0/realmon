@@ -30,12 +30,10 @@ namespace realmon.Utilities
                 };
 
                 var client = new DiagnosticsClient(processId);
-                using (var eventPipeSession = client.StartEventPipeSession(providers, false))
-                {
-                    var source = new EventPipeEventSource(eventPipeSession.EventStream);
-                    session = eventPipeSession;
-                    return source;
-                }
+                EventPipeSession eventPipeSession = client.StartEventPipeSession(providers, false))
+                var source = new EventPipeEventSource(eventPipeSession.EventStream);
+                session = eventPipeSession;
+                return source;
             }
 
             throw new PlatformNotSupportedException();
