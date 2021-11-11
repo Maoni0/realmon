@@ -78,31 +78,23 @@ namespace realmon
                 {
                     proc.AddCallbackOnDotNetRuntimeLoad(delegate (TraceLoadedDotNetRuntime runtime)
                     {
-                        try
+                        runtime.GCEnd += delegate (TraceProcess p, TraceGC gc)
                         {
-                            runtime.GCEnd += delegate (TraceProcess p, TraceGC gc)
+                            if (p.ProcessID == pid)
                             {
-                                if (p.ProcessID == pid)
+                                // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
+                                if (!minDurationForGCPausesInMSec.HasValue ||
+                                   (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                                 {
-                                    // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
-                                    if (!minDurationForGCPausesInMSec.HasValue ||
-                                       (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
-                                    {
-                                        lastGCTime = DateTime.UtcNow;
-                                        lastGC = gc;
+                                    lastGCTime = DateTime.UtcNow;
+                                    lastGC = gc;
 
-                                        lock (writerLock) {
-                                            Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
-                                        }
+                                    lock (writerLock) {
+                                        Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
                                     }
                                 }
-                            };
-                        }
-
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex.ToString());
-                        }
+                            }
+                        };
                     });
                 });
 

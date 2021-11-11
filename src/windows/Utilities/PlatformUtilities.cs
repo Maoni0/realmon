@@ -30,7 +30,7 @@ namespace realmon.Utilities
                 };
 
                 var client = new DiagnosticsClient(processId);
-                EventPipeSession eventPipeSession = client.StartEventPipeSession(providers, false))
+                EventPipeSession eventPipeSession = client.StartEventPipeSession(providers, false);
                 var source = new EventPipeEventSource(eventPipeSession.EventStream);
                 session = eventPipeSession;
                 return source;
