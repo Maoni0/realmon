@@ -118,15 +118,35 @@ The unit tests are in the ``test`` directory and can be run by:
 dotnet test
 ```
 
-**Building**
+## Building
 
-Currently it's a VS solution. It uses the TraceEvent library.
+**Build with VS**
 
-**Contribution**
+Open ``GCRealTimeMon.sln`` and build it with Visual Studio.
+
+**Build with command line**
+
+```bash
+dotnet publish -c Release -r win-x64 # build on Windows
+dotnet publish -c Release -r linux-x64 # build on Linux
+dotnet publish -c Release -r osx-x64 # build on macOS
+```
+
+Additionaly, you can pass `/p:AotCompilation=true` to build GCRealTimeMon with [NativeAOT](https://github.com/dotnet/runtimelab/tree/feature/NativeAOT).
+This requires native C++ toolchain (MSVC or clang) to be installed on the machine.
+
+```bash
+dotnet publish -c Release -r win-x64 /p:AotCompilation=true # build on Windows
+dotnet publish -c Release -r linux-x64 /p:AotCompilation=true # build on Linux
+dotnet publish -c Release -r osx-x64 /p:AotCompilation=true # build on macOS
+```
+
+Build artifacts can be found in `bin/Release/net6.0/[rid]/publish`.
+
+## Contribution
 
 Contributions are very welcome! Tasks I'm currently thinking about -
 
-+ Build with dotnet CLI in addition to a VS solution so folks can use this on Linux.
 + More info about GCs (the TraceGC class in TraceEvent provides a ton of info about each GC).
 + Take more command line args that allow uses to specify things like only show GCs that are blocking or show the allocated bytes in gen0/LOH inbetween GCs.
 
