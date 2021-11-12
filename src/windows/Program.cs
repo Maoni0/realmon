@@ -42,7 +42,7 @@ namespace realmon
             public string PathToConfigurationFile { get; set; } = "./DefaultConfig.yaml";
         }
 
-        static TraceEventSession session;
+        static IDisposable session;
         static DateTime lastGCTime;
         static TraceGC lastGC;
         static object writerLock = new object();
@@ -71,9 +71,8 @@ namespace realmon
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
             Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
-            session = new TraceEventSession("MySession");
             {
-                var source = session.Source;
+                var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out session);
                 source.NeedLoadedDotNetRuntimes();
                 source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
                 {
@@ -99,7 +98,6 @@ namespace realmon
                     });
                 });
 
-                session.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Informational, (ulong)ClrTraceEventParser.Keywords.GC);
 
                 source.Process();
             }

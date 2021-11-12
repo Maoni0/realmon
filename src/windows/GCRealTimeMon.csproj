@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.251802" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.73" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
   </ItemGroup>
