@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GCRealTimeMon", "src\windows\GCRealTimeMon.csproj", "{AD78E0AE-5BF2-4D2F-A7F4-0FB0369E605F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GCRealTimeMon", "src\GCRealTimeMon.csproj", "{AD78E0AE-5BF2-4D2F-A7F4-0FB0369E605F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GCRealTimeMon.UnitTests", "tests\GCRealTimeMon.UnitTests\GCRealTimeMon.UnitTests.csproj", "{A5A83224-3B9E-4E6C-9E1C-7C286170157E}"
 EndProject
