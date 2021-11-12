@@ -21,7 +21,7 @@ namespace realmon.Utilities
                 return traceEventSession.Source;
             }
 
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else
             {
                 var providers = new List<EventPipeProvider>()
                 {
@@ -35,8 +35,6 @@ namespace realmon.Utilities
                 session = eventPipeSession;
                 return source;
             }
-
-            throw new PlatformNotSupportedException();
         }
     }
 }
