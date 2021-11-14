@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+    <RootNamespace>realmon</RootNamespace>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-gcmon</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>dotnet-gcmon</PackageId>
+    <PackageVersion>0.1.0</PackageVersion>
+    <Title>dotnet-gcmon</Title>
+    <Owners>Maoni0</Owners>
+    <RepositoryUrl>https://github.com/Maoni0</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Maoni0/realmon</PackageProjectUrl>
+    <Description>Global CLI tool to monitor Garbage Collections in real time</Description>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <PackageTags>Garbage Collector Monitoring Realtime</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\GCRealTimeMon\Configuration\Configuration.cs" Link="Configuration\Configuration.cs" />
+    <Compile Include="..\GCRealTimeMon\Configuration\ConfigurationReader.cs" Link="Configuration\ConfigurationReader.cs" />
+    <Compile Include="..\GCRealTimeMon\Program.cs" Link="Program.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\ColumnInfo.cs" Link="Utilities\ColumnInfo.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\ColumnInfoMap.cs" Link="Utilities\ColumnInfoMap.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\PlatformUtilities.cs" Link="Utilities\PlatformUtilities.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\PrintUtilities.cs" Link="Utilities\PrintUtilities.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.251802" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.73" />
+    <PackageReference Include="YamlDotNet" Version="11.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\GCRealTimeMon\DefaultConfig.yaml" Pack="true" PackagePath="">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
