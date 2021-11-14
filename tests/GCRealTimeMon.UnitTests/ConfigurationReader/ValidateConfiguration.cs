@@ -54,5 +54,78 @@ namespace realmon.UnitTests
             Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
             validate.Should().Throw<KeyNotFoundException>();
         }
+
+        [TestMethod]
+        public void ValidateConfiguration_StatsModeEnabledTimerNotSpecified_ShouldThrowArgumentException()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.StatsMode = new Dictionary<string, string>();
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().Throw<ArgumentException>();
+        }
+
+        [TestMethod]
+        public void ValidateConfiguration_StatsModeEnabledTimerWithoutPeriodMagnitude_ShouldThrowArgumentException()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.StatsMode = new Dictionary<string, string>
+            {
+                { "timer", "m" }
+            };
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().Throw<ArgumentException>();
+        }
+
+        [TestMethod]
+        public void ValidateConfiguration_StatsModeEnabledTimerWithoutPeriodType_ShouldThrowArgumentException()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.StatsMode = new Dictionary<string, string>
+            {
+                { "timer", "20" }
+            };
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().Throw<ArgumentException>();
+        }
+
+        [TestMethod]
+        public void ValidateConfiguration_StatsModeEnabledTimerWithNonIntegerPeriodMagnitude_ShouldThrowArgumentException()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.StatsMode = new Dictionary<string, string>
+            {
+                { "timer", "20.4m" }
+            };
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().Throw<ArgumentException>();
+        }
+
+        [TestMethod]
+        public void ValidateConfiguration_StatsModeEnabledTimerWithCorrectPeriodFormat_SuccessfulValidation()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.StatsMode = new Dictionary<string, string>
+            {
+                { "timer", "20m" }
+            };
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().NotThrow<ArgumentException>();
+            validate.Should().NotThrow<ArgumentNullException>();
+            validate.Should().NotThrow<KeyNotFoundException>();
+        }
     }
 }

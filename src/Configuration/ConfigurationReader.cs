@@ -75,6 +75,32 @@ namespace realmon.Configuration
                     throw new KeyNotFoundException($"Column: {column} in the `available_column` list isn't a registered column in the ColumnInfoMap.");
                 }
             }
+
+            // Checks for the optional stats mode.
+            if (configuration.StatsMode != null)
+            {
+                // timer is a mandatory property if `stats_mode` is opted in.
+                if (!configuration.StatsMode.TryGetValue("timer", out string timer))
+                {
+                    throw new ArgumentException("`timer` is null.");
+                }
+
+                // timer format is #m or #s where # is the magnitude of the period and m is for minutes / s for seconds.
+                if (timer.Length <= 1)
+                {
+                    throw new ArgumentException("The `timer` value should be specified as a period as an int and a char representing the magnitude and the period type with minutes 'm' or seconds 's', respectively.");
+                }
+
+                if (timer[timer.Length - 1] != 's' && timer[timer.Length - 1] != 'm')
+                {
+                    throw new ArgumentException("The `timer` value should either end with a period type representing character - minutes 'm' or seconds 's'"); 
+                }
+
+                if (!int.TryParse(timer[0..^1], out int _))
+                {
+                    throw new ArgumentException("The `timer` value should be a number as the period magnitude followed by a period type representing character"); 
+                }
+            }
         }
     }
 }

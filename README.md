@@ -63,6 +63,14 @@ Heap Stats as of 2021-11-08 03:15:30Z (Run 1 for gen 0):
 The configuration file is a YAML based file currently with the following sections:
 - __columns__: The columns to display. 
 - __available_columns__: All columns that are available to display.
+- __stats_mode__: Configurations related to the heap stats. 
+  - ``timer``: Specifying this with a period magnitude and type that dictates the candence of the timer that prints the heap stats.
+    - the period type can either be in minutes 'm' or seconds 's'.
+    - the period magnitude has to be as an int.
+    - Examples: 
+      - ``"timer" : "5m"  # 5 minutes``
+      - ``"timer" : "20s" # 20 seconds``
+  - A full example with the Heap printing every 30 seconds can be found [here](tests/GCRealTimeMon.UnitTests/ConfigurationReader/TestConfigurations/DefaultWithStatsMode.yaml)
 
 Currently, the available columns are:
 

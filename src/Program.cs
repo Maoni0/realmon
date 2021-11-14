@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using realmon.Configuration;
 using realmon.Utilities;
+using System.Linq;
 
 namespace realmon
 {
@@ -43,6 +44,7 @@ namespace realmon
         }
 
         static IDisposable session;
+        static IDisposable heapStatsTimer;
         static DateTime lastGCTime;
         static TraceGC lastGC;
         static object writerLock = new object();
@@ -103,6 +105,43 @@ namespace realmon
             }
         }
 
+        private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration)
+        {
+            if (configuration.StatsMode == null)
+            {
+                return;
+            }
+
+            // Setup timer for Heap Stats.
+            // At this point of time, all validations are successful => get exactly what we need without checking.
+            string timerAsString = configuration.StatsMode["timer"];
+            int period = int.Parse(timerAsString[0..^1]);
+            char periodType = timerAsString.Last();
+            period = periodType switch
+            {
+                // minutes.
+                'm' => period * 60 * 1000,
+                // seconds.
+                's' => period * 1000,
+                // default, shouldn't get here as the validation takes care of this.
+                _ => throw new NotImplementedException()
+            };
+
+            TimerCallback timerCallback = (_) =>
+            {
+                if (lastGC != null)
+                {
+                    PrintLastStats();
+                }
+            };
+
+            // TODO: Figure out when to dispose this.
+            heapStatsTimer = new Timer(callback: timerCallback, 
+                                       dueTime: 0, 
+                                       state: null,
+                                       period: period);
+        }
+
         private static void PrintLastStats()
         {
             if (lastGC == null)
@@ -160,6 +199,7 @@ namespace realmon
                   }
 
                   Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(options.PathToConfigurationFile);
+                  SetupHeapStatsTimerIfEnabled(configuration);
 
                   if (options.ProcessId != -1)
                   {
