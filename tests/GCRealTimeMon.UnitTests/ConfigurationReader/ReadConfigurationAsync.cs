@@ -4,7 +4,6 @@ using realmon.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace realmon.UnitTests
@@ -62,7 +61,7 @@ namespace realmon.UnitTests
             configuration.StatsMode.Should().ContainKeys("timer");
             configuration.StatsMode["timer"].Should().NotBeNull();
             int.TryParse(configuration.StatsMode["timer"][0..^1], out var _).Should().BeTrue();
-            bool conditionForPeriodType = configuration.StatsMode["timer"].Last() == 'm' || configuration.StatsMode["timer"].Last() == 's';
+            bool conditionForPeriodType = configuration.StatsMode["timer"][^1] == 'm' || configuration.StatsMode["timer"][^1] == 's';
             conditionForPeriodType.Should().BeTrue();
         }
 
