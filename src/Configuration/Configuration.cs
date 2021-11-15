@@ -16,5 +16,10 @@ namespace realmon.Configuration
         /// All columns available to display. 
         /// </summary>
         public List<string> AvailableColumns { get; set; }
+
+        /// <summary>
+        /// Stats mode properties. 
+        /// </summary>
+        public Dictionary<string, string> StatsMode { get; set; }
     }
 }

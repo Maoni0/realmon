@@ -1,6 +1,5 @@
 ﻿using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using System;
-using System.Linq;
 using System.Text;
 
 namespace realmon.Utilities
@@ -47,7 +46,14 @@ namespace realmon.Utilities
                     repeatCount += columnInfo.Alignment + 3; // +3 is for the | and the enclosing space.
                 }
             }
-            return string.Concat(Enumerable.Repeat("-", repeatCount));
+
+            string lineSeparator = "";
+            for(int i = 0; i < repeatCount; i++)
+            {
+                lineSeparator = string.Concat(lineSeparator, "-");
+            }
+
+            return lineSeparator;
         }
 
         /// <summary>

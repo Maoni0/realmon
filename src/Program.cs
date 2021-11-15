@@ -43,6 +43,7 @@ namespace realmon
         }
 
         static IDisposable session;
+        static Timer heapStatsTimer;
         static DateTime lastGCTime;
         static TraceGC lastGC;
         static object writerLock = new object();
@@ -73,6 +74,7 @@ namespace realmon
 
             {
                 var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out session);
+
                 source.NeedLoadedDotNetRuntimes();
                 source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
                 {
@@ -101,6 +103,43 @@ namespace realmon
 
                 source.Process();
             }
+        }
+
+        private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration)
+        {
+            if (configuration.StatsMode == null)
+            {
+                return;
+            }
+
+            // Setup timer for Heap Stats.
+            // At this point of time, all validations are successful => get exactly what we need without checking.
+            string timerAsString = configuration.StatsMode["timer"];
+            int period = int.Parse(timerAsString[0..^1]);
+            char periodType = timerAsString[^1];
+            period = periodType switch
+            {
+                // minutes.
+                'm' => period * 60 * 1000,
+                // seconds.
+                's' => period * 1000,
+                // default, shouldn't get here as the validation takes care of this.
+                _ => throw new NotImplementedException()
+            };
+
+            TimerCallback timerCallback = (_) =>
+            {
+                if (lastGC != null)
+                {
+                    PrintLastStats();
+                }
+            };
+
+            // If ``stats_mode`` is enabled, the lifetime of this timer should be that of the process.
+            heapStatsTimer = new Timer(callback: timerCallback, 
+                                       dueTime: 0, 
+                                       state: null,
+                                       period: period);
         }
 
         private static void PrintLastStats()
@@ -160,6 +199,7 @@ namespace realmon
                   }
 
                   Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(options.PathToConfigurationFile);
+                  SetupHeapStatsTimerIfEnabled(configuration);
 
                   if (options.ProcessId != -1)
                   {
