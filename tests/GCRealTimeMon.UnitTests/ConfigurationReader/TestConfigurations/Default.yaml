@@ -17,7 +17,6 @@ available_columns:
     - reason                              # Reason for GC.
     - suspension time (ms)                # The time in milliseconds that it took to suspend all threads to start this GC. For background GCs, we pause multiple times, so this value may be higher than for foreground GCs. 
     - pause time (%)                      # The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap. For background GCs this is small. 
-    - CPU time (%)                        # Since the last GC, the GC CPU time divided by the total Process CPU time expressed as a percentage. 
     - gen0 alloc (mb)                     # Amount allocated in Gen0 since the last GC occurred in MB. 
     - gen0 alloc rate                     # The average allocation rate since the last GC.
     - peak size (mb)                      # The size on entry of this GC (includes fragmentation) in MB. 
