@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using realmon.Configuration;
 using realmon.Utilities;
-using System.Linq;
 
 namespace realmon
 {
@@ -44,7 +43,7 @@ namespace realmon
         }
 
         static IDisposable session;
-        static IDisposable heapStatsTimer;
+        static Timer heapStatsTimer;
         static DateTime lastGCTime;
         static TraceGC lastGC;
         static object writerLock = new object();
@@ -75,6 +74,7 @@ namespace realmon
 
             {
                 var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out session);
+
                 source.NeedLoadedDotNetRuntimes();
                 source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
                 {
@@ -116,7 +116,7 @@ namespace realmon
             // At this point of time, all validations are successful => get exactly what we need without checking.
             string timerAsString = configuration.StatsMode["timer"];
             int period = int.Parse(timerAsString[0..^1]);
-            char periodType = timerAsString.Last();
+            char periodType = timerAsString[^1];
             period = periodType switch
             {
                 // minutes.
@@ -135,7 +135,7 @@ namespace realmon
                 }
             };
 
-            // TODO: Figure out when to dispose this.
+            // If ``stats_mode`` is enabled, the lifetime of this timer should be that of the process.
             heapStatsTimer = new Timer(callback: timerCallback, 
                                        dueTime: 0, 
                                        state: null,
