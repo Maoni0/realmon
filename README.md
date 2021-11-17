@@ -63,6 +63,14 @@ Heap Stats as of 2021-11-08 03:15:30Z (Run 1 for gen 0):
 The configuration file is a YAML based file currently with the following sections:
 - __columns__: The columns to display. 
 - __available_columns__: All columns that are available to display.
+- __stats_mode__: Configurations related to the heap stats. 
+  - ``timer``: Specifying this with a period magnitude and type that dictates the candence of the timer that prints the heap stats.
+    - the period type can either be in minutes 'm' or seconds 's'.
+    - the period magnitude has to be as an int.
+    - Examples: 
+      - ``"timer" : "5m"  # 5 minutes``
+      - ``"timer" : "20s" # 20 seconds``
+  - A full example with the Heap printing every 30 seconds can be found [here](tests/GCRealTimeMon.UnitTests/ConfigurationReader/TestConfigurations/DefaultWithStatsMode.yaml)
 
 Currently, the available columns are:
 
@@ -75,7 +83,6 @@ Currently, the available columns are:
 | suspension time (ms)   | The time in milliseconds that it took to suspend all threads to start this GC | `TraceGC.SuspendDurationMSec`                                                             |
 | pause time (ms)   | The time managed threads were paused during this GC, in milliseconds | `TraceGC.PauseDurationMSec`    |
 | pause time (%)           | The amount of time that execution in managed code is blocked because the GC needs exclusive use to the heap. For background GCs this is small.                                   | `TraceGC.PauseTimePercentageSinceLastGC`                                                  |
-| CPU time (%)             | Since the last GC, the GC CPU time divided by the total Process CPU time expressed as a percentage.                                                                              | `TraceGC.PercentTimeInGC`                                                                 |
 | gen0 alloc (mb)        | Amount allocated in Gen0 since the last GC occurred in MB.                                                                                                                       | `TraceGC.UserAllocated[(int)Gens.Gen0]`                                                   |
 | gen0 alloc rate        | The average allocation rate since the last GC.                                                                                                                                   | `(TraceGC.UserAllocated[(int)Gens.Gen0] * 1000.0) / TraceGC.DurationSinceLastRestartMSec` |
 | peak size (mb)         | The size on entry of this GC (includes fragmentation) in MB.                                                                                                                     | `TraceGC.HeapSizePeakMB`                                                                  |

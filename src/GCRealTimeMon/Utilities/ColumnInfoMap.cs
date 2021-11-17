@@ -68,10 +68,6 @@ namespace realmon.Utilities
                                                    format: "N1",
                                                    getColumnValueFromEvent: (traceEvent) => traceEvent.PauseTimePercentageSinceLastGC )},
 
-                { "CPU time (%)", new ColumnInfo(name: "CPU time (%)",
-                                                 format: "N1",
-                                                 getColumnValueFromEvent: (traceEvent) => traceEvent.PercentTimeInGC )},
-
                 { "gen0 alloc (mb)", new ColumnInfo(name: "gen0 alloc (mb)",
                                                     format: "N3",
                                                     getColumnValueFromEvent: (traceEvent) => traceEvent.UserAllocated[(int)Gens.Gen0] )},

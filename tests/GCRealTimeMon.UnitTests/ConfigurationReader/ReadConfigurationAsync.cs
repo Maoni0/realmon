@@ -36,6 +36,36 @@ namespace realmon.UnitTests
         }
 
         [TestMethod]
+        public async Task ReadConfigurationAsync_ReadDefaultWithStatsMode_SuccessfullyParsed()
+        {
+            string defaultPath = Path.Combine(TestConfigurationPath, "DefaultWithStatsMode.yaml");
+            Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(defaultPath);
+            configuration.Should().NotBeNull();
+
+            // Check Columns.
+            configuration.Columns.Should().NotBeNull();
+            configuration.Columns.Should().Contain("type");
+            configuration.Columns.Should().Contain("gen");
+            configuration.Columns.Should().Contain("pause (ms)");
+            configuration.Columns.Should().Contain("reason");
+
+            // Check Available Columns.
+            configuration.AvailableColumns.Should().NotBeNull();
+            configuration.AvailableColumns.Should().Contain("type");
+            configuration.AvailableColumns.Should().Contain("gen");
+            configuration.AvailableColumns.Should().Contain("pause (ms)");
+            configuration.AvailableColumns.Should().Contain("reason");
+
+            // Check Stats Mode.
+            configuration.StatsMode.Should().NotBeNull();
+            configuration.StatsMode.Should().ContainKeys("timer");
+            configuration.StatsMode["timer"].Should().NotBeNull();
+            int.TryParse(configuration.StatsMode["timer"][0..^1], out var _).Should().BeTrue();
+            bool conditionForPeriodType = configuration.StatsMode["timer"][^1] == 'm' || configuration.StatsMode["timer"][^1] == 's';
+            conditionForPeriodType.Should().BeTrue();
+        }
+
+        [TestMethod]
         public async Task ReadConfigurationAsync_NoColumns_ShouldThrowNullReferenceException()
         {
             string path = Path.Combine(TestConfigurationPath, "NoColumns.yaml");
