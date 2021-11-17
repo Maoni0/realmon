@@ -3,8 +3,5 @@
         <Assembly Name="System.Private.CoreLib">
             <Type Name="System.Collections.Generic.List`1[[System.String, System.Private.CoreLib]]" Dynamic="Required All" />
         </Assembly>
-        <Assembly Name="OSExtensions">
-            <Type Name="Microsoft.Diagnostics.Tracing.Extensions.ETWControl" Dynamic="Required All" />
-        </Assembly>
     </Application>
 </Directives>
