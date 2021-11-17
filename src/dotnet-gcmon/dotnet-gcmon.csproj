@@ -17,9 +17,11 @@
     <PackageVersion>0.1.0</PackageVersion>
     <Title>dotnet-gcmon</Title>
     <Owners>Maoni0</Owners>
+    <Authors>Maoni Stephens</Authors>
     <RepositoryUrl>https://github.com/Maoni0</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/Maoni0/realmon</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <Description>Global CLI tool to monitor Garbage Collections in real time</Description>
     <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
     <PackageTags>Garbage Collector Monitoring Realtime</PackageTags>
@@ -34,6 +36,12 @@
     <Compile Include="..\GCRealTimeMon\Utilities\PlatformUtilities.cs" Link="Utilities\PlatformUtilities.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\PrintUtilities.cs" Link="Utilities\PrintUtilities.cs" />
   </ItemGroup>
+
+  <!--add LICENCE.txt file to the package (PackageLicenceUlr no more supported)-->
+  <ItemGroup>
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
