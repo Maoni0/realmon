@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\GCRealTimeMon.csproj" />
+    <ProjectReference Include="..\..\src\GCRealTimeMon\GCRealTimeMon.csproj" />
   </ItemGroup>
 
   <ItemGroup>
