@@ -1,15 +1,12 @@
-﻿using System;
-using Microsoft.Diagnostics.Tracing;
-using Microsoft.Diagnostics.Tracing.Session;
-using Microsoft.Diagnostics.Tracing.Parsers;
+﻿using CommandLine;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using System.Threading;
-using CommandLine;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using realmon.Configuration;
 using realmon.Utilities;
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace realmon
 {
@@ -55,13 +52,11 @@ namespace realmon
             {
                 throw new ArgumentException($"No Processes found with name: {options.ProcessName}");
             }
-
             else
             {
                 RealTimeProcessingByProcessId(processes[0].Id, options, configuration);
             }
         }
-
 
         public static void RealTimeProcessingByProcessId(int pid, Options options, Configuration.Configuration configuration)
         {
@@ -91,7 +86,8 @@ namespace realmon
                                     lastGCTime = DateTime.UtcNow;
                                     lastGC = gc;
 
-                                    lock (writerLock) {
+                                    lock (writerLock)
+                                    {
                                         Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
                                     }
                                 }
@@ -99,7 +95,6 @@ namespace realmon
                         };
                     });
                 });
-
 
                 source.Process();
             }
@@ -136,8 +131,8 @@ namespace realmon
             };
 
             // If ``stats_mode`` is enabled, the lifetime of this timer should be that of the process.
-            heapStatsTimer = new Timer(callback: timerCallback, 
-                                       dueTime: 0, 
+            heapStatsTimer = new Timer(callback: timerCallback,
+                                       dueTime: 0,
                                        state: null,
                                        period: period);
         }
@@ -148,7 +143,7 @@ namespace realmon
             {
                 Console.WriteLine("No stats collected yet.");
             }
-            else 
+            else
             {
                 var t = lastGC; // capture, since this could tear
                 var s = t.HeapStats;
@@ -205,7 +200,6 @@ namespace realmon
                   {
                       RealTimeProcessingByProcessId(options.ProcessId, options, configuration);
                   }
-
                   else if (!string.IsNullOrEmpty(options.ProcessName))
                   {
                       RealTimeProcessingByProcessName(options, configuration);
