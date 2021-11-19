@@ -1,15 +1,16 @@
 ﻿using System;
-using Microsoft.Diagnostics.Tracing;
-using Microsoft.Diagnostics.Tracing.Session;
-using Microsoft.Diagnostics.Tracing.Parsers;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using System.Threading;
 using CommandLine;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using realmon.Configuration;
 using realmon.Utilities;
+
 
 namespace realmon
 {
@@ -39,31 +40,15 @@ namespace realmon
                     longName: "configPath",
                     Required = false,
                     HelpText = "The path to the YAML configuration file that is read in.")]
-            public string PathToConfigurationFile { get; set; } = "./DefaultConfig.yaml";
+            public string PathToConfigurationFile { get; set; } = null;
         }
 
-        static IDisposable session;
         static Timer heapStatsTimer;
         static DateTime lastGCTime;
         static TraceGC lastGC;
         static object writerLock = new object();
 
-        public static void RealTimeProcessingByProcessName(Options options, Configuration.Configuration configuration)
-        {
-            Process[] processes = Process.GetProcessesByName(options.ProcessName);
-            if (processes.Length == 0)
-            {
-                throw new ArgumentException($"No Processes found with name: {options.ProcessName}");
-            }
-
-            else
-            {
-                RealTimeProcessingByProcessId(processes[0].Id, options, configuration);
-            }
-        }
-
-
-        public static void RealTimeProcessingByProcessId(int pid, Options options, Configuration.Configuration configuration)
+        public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration)
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
@@ -72,37 +57,39 @@ namespace realmon
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
             Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
+            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out var session);
+
+            // this thread is responsible for listening to user input on the console and dispose the session accordingly
+            Thread monitorThread = new Thread(() => HandleConsoleInput(session)) ;
+            monitorThread.Start();
+
+            source.NeedLoadedDotNetRuntimes();
+            source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
             {
-                var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out session);
-
-                source.NeedLoadedDotNetRuntimes();
-                source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
+                proc.AddCallbackOnDotNetRuntimeLoad(delegate (TraceLoadedDotNetRuntime runtime)
                 {
-                    proc.AddCallbackOnDotNetRuntimeLoad(delegate (TraceLoadedDotNetRuntime runtime)
+                    runtime.GCEnd += delegate (TraceProcess p, TraceGC gc)
                     {
-                        runtime.GCEnd += delegate (TraceProcess p, TraceGC gc)
+                        if (p.ProcessID == pid)
                         {
-                            if (p.ProcessID == pid)
+                            // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
+                            if (!minDurationForGCPausesInMSec.HasValue ||
+                                (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                             {
-                                // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
-                                if (!minDurationForGCPausesInMSec.HasValue ||
-                                   (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
-                                {
-                                    lastGCTime = DateTime.UtcNow;
-                                    lastGC = gc;
+                                lastGCTime = DateTime.UtcNow;
+                                lastGC = gc;
 
-                                    lock (writerLock) {
-                                        Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
-                                    }
+                                lock (writerLock) {
+                                    Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
                                 }
                             }
-                        };
-                    });
+                        }
+                    };
                 });
+            });
 
-
-                source.Process();
-            }
+            // blocking call on the main thread until the session gets disposed upon user action
+            source.Process();
         }
 
         private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration)
@@ -136,8 +123,8 @@ namespace realmon
             };
 
             // If ``stats_mode`` is enabled, the lifetime of this timer should be that of the process.
-            heapStatsTimer = new Timer(callback: timerCallback, 
-                                       dueTime: 0, 
+            heapStatsTimer = new Timer(callback: timerCallback,
+                                       dueTime: 0,
                                        state: null,
                                        period: period);
         }
@@ -148,7 +135,7 @@ namespace realmon
             {
                 Console.WriteLine("No stats collected yet.");
             }
-            else 
+            else
             {
                 var t = lastGC; // capture, since this could tear
                 var s = t.HeapStats;
@@ -171,9 +158,8 @@ namespace realmon
             }
         }
 
-        static void RunTest()
+        static void HandleConsoleInput(IDisposable session)
         {
-            Console.WriteLine("------- press s for current stats or any other key to exit -------");
             var k = Console.ReadKey(true);
 
             while (k.Key == ConsoleKey.S)
@@ -184,34 +170,76 @@ namespace realmon
             session.Dispose();
         }
 
+        // Compute the path to the configuration file:
+        //    given by -c on the command line (could be a full path name, relative path or file in the current working directory)
+        //    or use the default .yaml file in the tool folder
+        static async Task<Configuration.Configuration> GetConfiguration(Options options)
+        {
+            var configurationFile = options.PathToConfigurationFile;
+
+            if (string.IsNullOrEmpty(configurationFile))
+            {
+                // the default .yaml file is at the same location as the CLI global tool / console application
+                configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+            }
+            else
+            // ensure that the configuration file given on the command line exists
+            if (!File.Exists(configurationFile))
+            {
+                throw new ArgumentException($"The given configuration file '{configurationFile}' does not exist...");
+            }
+
+            var configuration = await ConfigurationReader.ReadConfigurationAsync(configurationFile);
+            return configuration;
+        }
+
         static async Task Main(string[] args)
         {
-            ThreadStart ts = new ThreadStart(RunTest);
-            Thread monitorThread = new Thread(ts);
-            monitorThread.Start();
-
-            await Parser.Default.ParseArguments<Options>(args)
-              .MapResult(async options =>
-              {
-                  if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
+            try
+            {
+                await Parser.Default.ParseArguments<Options>(args)
+                  .MapResult(async options =>
                   {
-                      throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
-                  }
+                      if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
+                      {
+                          throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
+                      }
 
-                  Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(options.PathToConfigurationFile);
-                  SetupHeapStatsTimerIfEnabled(configuration);
+                      var configuration = await GetConfiguration(options);
 
-                  if (options.ProcessId != -1)
-                  {
-                      RealTimeProcessingByProcessId(options.ProcessId, options, configuration);
-                  }
+                      if (options.ProcessId == -1)
+                      {
+                          Process[] processes = Process.GetProcessesByName(options.ProcessName);
+                          if (processes.Length == 0)
+                          {
+                              throw new ArgumentException($"No Processes found with name: {options.ProcessName}");
+                          }
 
-                  else if (!string.IsNullOrEmpty(options.ProcessName))
-                  {
-                      RealTimeProcessingByProcessName(options, configuration);
-                  }
-              },
-              errors => Task.FromResult(errors));
+                          if (processes.Length != 1)
+                          {
+                              throw new ArgumentException($"Several processes with name: '{options.ProcessName}' have been found.");
+                          }
+
+                          options.ProcessId = processes[0].Id;
+                      }
+
+                      Console.WriteLine("------- press s for current stats or any other key to exit -------");
+
+                      SetupHeapStatsTimerIfEnabled(configuration);
+                      RealTimeProcessing(options.ProcessId, options, configuration);
+                  },
+                  errors => Task.FromResult(errors)
+                  );
+            }
+            catch (Exception x) when (
+                (x is ArgumentException) ||
+                (x is KeyNotFoundException)
+                )
+            {
+                Console.WriteLine(x.Message);
+
+                // exit on argument/configuration errors
+            }
         }
     }
 }
