@@ -23,12 +23,12 @@ namespace realmon.Configuration
                 throw new ArgumentNullException("Path to the Configuration file is null.");
             }
 
-            IDeserializer deserialier = new DeserializerBuilder()
+            IDeserializer deserializer = new DeserializerBuilder()
                                             .WithNamingConvention(UnderscoredNamingConvention.Instance)
                                             .Build();
 
             string configContents = await File.ReadAllTextAsync(path);
-            Configuration configuration = deserialier.Deserialize<Configuration>(configContents);
+            Configuration configuration = deserializer.Deserialize<Configuration>(configContents);
             ValidateConfiguration(configuration);
             return await Task.FromResult(configuration);
         }

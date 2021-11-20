@@ -1,7 +1,4 @@
 ﻿using System;
-using Microsoft.Diagnostics.Tracing;
-using Microsoft.Diagnostics.Tracing.Session;
-using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using System.Threading;
@@ -40,6 +37,12 @@ namespace realmon
                     Required = false,
                     HelpText = "The path to the YAML configuration file that is read in.")]
             public string PathToConfigurationFile { get; set; } = "./DefaultConfig.yaml";
+
+            [Option(shortName: 'g',
+                    longName: "createConfigPath",
+                    Required = false,
+                    HelpText = "The path of the config to be created via the command line.")]
+            public string PathToNewConfigurationFile { get; set; } = null;
         }
 
         static IDisposable session;
@@ -186,21 +189,38 @@ namespace realmon
 
         static async Task Main(string[] args)
         {
-            ThreadStart ts = new ThreadStart(RunTest);
-            Thread monitorThread = new Thread(ts);
-            monitorThread.Start();
-
             await Parser.Default.ParseArguments<Options>(args)
               .MapResult(async options =>
               {
+                  // The process id / process name must always be provided.
                   if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                   {
                       throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
                   }
 
-                  Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(options.PathToConfigurationFile);
+                  // Next, deal with configuration.
+                  Configuration.Configuration configuration = null; 
+
+                  // Case 1: Create a new configuration file, persist to the given path and use it for this session.
+                  if (!string.IsNullOrWhiteSpace(options.PathToNewConfigurationFile))
+                  {
+                      configuration = await NewConfigurationManager.CreateAndReturnNewConfiguration(options.PathToNewConfigurationFile);
+                  }
+
+                  // Case 2: Use the path to serialize the configuration to be used for this session.
+                  else
+                  {
+                      configuration = await ConfigurationReader.ReadConfigurationAsync(options.PathToConfigurationFile);
+                  }
+
+                  // Start the monitor thread after the configuration has been parsed to avoid issues with the prompt.
+                  ThreadStart ts = new ThreadStart(RunTest);
+                  Thread monitorThread = new Thread(ts);
+                  monitorThread.Start();
+
                   SetupHeapStatsTimerIfEnabled(configuration);
 
+                  // Process the session based on the id / process name.
                   if (options.ProcessId != -1)
                   {
                       RealTimeProcessingByProcessId(options.ProcessId, options, configuration);
