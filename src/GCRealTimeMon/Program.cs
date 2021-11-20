@@ -40,14 +40,13 @@ namespace realmon
                     longName: "configPath",
                     Required = false,
                     HelpText = "The path to the YAML configuration file that is read in.")]
-            public string PathToConfigurationFile { get; set; } = null;
-            public string PathToConfigurationFile { get; set; } = "./DefaultConfig.yaml";
+            public string PathToConfigurationFile { get; set; } = string.Empty;
 
             [Option(shortName: 'g',
                     longName: "createConfigPath",
                     Required = false,
                     HelpText = "The path of the config to be created via the command line.")]
-            public string PathToNewConfigurationFile { get; set; } = null;
+            public string PathToNewConfigurationFile { get; set; } = string.Empty;
         }
 
         static Timer heapStatsTimer;
@@ -178,26 +177,37 @@ namespace realmon
         }
 
         // Compute the path to the configuration file:
-        //    given by -c on the command line (could be a full path name, relative path or file in the current working directory)
-        //    or use the default .yaml file in the tool folder
+        //    if no path is specified, use the default .yaml file in the tool folder.
+        //    else if the -c arg is specified (could be a full path name, relative path or file in the current working directory), serialize the file in the path.
+        //    else if the -g arg is specified, prompt the user to create the config file that'll be persisted in the specified path.
         static async Task<Configuration.Configuration> GetConfiguration(Options options)
         {
-            var configurationFile = options.PathToConfigurationFile;
+            // Case: -c was specified.
+            if (!string.IsNullOrEmpty(options.PathToConfigurationFile))
+            {
+                string configurationFile = options.PathToConfigurationFile;
+                // Validate if the file in the specified path exists.
+                if (!File.Exists(configurationFile))
+                {
+                    throw new ArgumentException($"The given configuration file '{configurationFile}' does not exist...");
+                }
 
-            if (string.IsNullOrEmpty(configurationFile))
+                return await ConfigurationReader.ReadConfigurationAsync(configurationFile);
+            }
+
+            // Case: -g was specified.
+            else if (!string.IsNullOrEmpty(options.PathToNewConfigurationFile))
+            {
+                return await NewConfigurationManager.CreateAndReturnNewConfiguration(options.PathToNewConfigurationFile);
+            }
+
+            // Case: Neither -g nor -c was specified => fall back to the Default config.
+            else
             {
                 // the default .yaml file is at the same location as the CLI global tool / console application
-                configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+                string configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+                return await ConfigurationReader.ReadConfigurationAsync(configurationFile);
             }
-            else
-            // ensure that the configuration file given on the command line exists
-            if (!File.Exists(configurationFile))
-            {
-                throw new ArgumentException($"The given configuration file '{configurationFile}' does not exist...");
-            }
-
-            var configuration = await ConfigurationReader.ReadConfigurationAsync(configurationFile);
-            return configuration;
         }
 
         static async Task Main(string[] args)
@@ -207,6 +217,7 @@ namespace realmon
                 await Parser.Default.ParseArguments<Options>(args)
                   .MapResult(async options =>
                   {
+                      // The process id / process name must always be provided.
                       if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                       {
                           throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
