@@ -29,13 +29,13 @@ namespace realmon.Configuration
             if (shouldSetupTimer)
             {
                 string timer = Prompt.Input<string>("Enter the period magnitude as an integer and 'm' for minutes / 's' for seconds");
-                statsHeapDict["timer"] = timer; 
+                statsHeapDict["timer"] = timer;
             }
 
             Configuration configuration = new Configuration
             {
                 Columns = nameOfColumns.ToList(),
-                AvailableColumns = Utilities.ColumnInfoMap.Map.Keys.ToList() 
+                AvailableColumns = Utilities.ColumnInfoMap.Map.Keys.ToList()
             };
 
             if (shouldSetupTimer)

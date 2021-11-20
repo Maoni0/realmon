@@ -39,14 +39,14 @@ namespace realmon
             [Option(shortName: 'c',
                     longName: "configPath",
                     Required = false,
-                    HelpText = "The path to the YAML configuration file that is read in.")]
-            public string PathToConfigurationFile { get; set; } = string.Empty;
+                    HelpText = "The path to the YAML configuration file that is read in. If no path is specified, the user can create a new config via prompts on the command line.")]
+            public string PathToConfigurationFile { get; set; } = null;
 
             [Option(shortName: 'g',
                     longName: "createConfigPath",
                     Required = false,
                     HelpText = "The path of the config to be created via the command line.")]
-            public string PathToNewConfigurationFile { get; set; } = string.Empty;
+            public string PathToNewConfigurationFile { get; set; } = null;
         }
 
         static Timer heapStatsTimer;
@@ -179,13 +179,21 @@ namespace realmon
         // Compute the path to the configuration file:
         //    if no path is specified, use the default .yaml file in the tool folder.
         //    else if the -c arg is specified (could be a full path name, relative path or file in the current working directory), serialize the file in the path.
-        //    else if the -g arg is specified, prompt the user to create the config file that'll be persisted in the specified path.
         static async Task<Configuration.Configuration> GetConfiguration(Options options)
         {
+            string defaultPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+
             // Case: -c was specified.
             if (!string.IsNullOrEmpty(options.PathToConfigurationFile))
             {
                 string configurationFile = options.PathToConfigurationFile;
+
+                // If the SENTINEL_VALUE passed by force, start the prompt to overwrite the default config.
+                if (string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0)
+                {
+                    return await NewConfigurationManager.CreateAndReturnNewConfiguration(defaultPath);
+                }
+
                 // Validate if the file in the specified path exists.
                 if (!File.Exists(configurationFile))
                 {
@@ -205,8 +213,7 @@ namespace realmon
             else
             {
                 // the default .yaml file is at the same location as the CLI global tool / console application
-                string configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
-                return await ConfigurationReader.ReadConfigurationAsync(configurationFile);
+                return await ConfigurationReader.ReadConfigurationAsync(defaultPath);
             }
         }
 
@@ -214,6 +221,8 @@ namespace realmon
         {
             try
             {
+                args = CommandLineUtilities.AddSentinelValueForTheConfigPathIfNotSpecified(args);
+
                 await Parser.Default.ParseArguments<Options>(args)
                   .MapResult(async options =>
                   {

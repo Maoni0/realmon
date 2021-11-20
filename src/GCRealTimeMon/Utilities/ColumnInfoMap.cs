@@ -28,7 +28,7 @@ namespace realmon.Utilities
             Map[$"{gen} survival rate"] =
                 new ColumnInfo(name: $"{gen.ToString().ToLower()} survival rate",
                                format: "N0",
-                               description: $"The % of objects in {gen} that survived this GC.", 
+                               description: $"The % of objects in {gen} that survived this GC.",
                                getColumnValueFromEvent: (traceEvent) => traceEvent.SurvivalPercent(generation));
             Map[$"{gen} frag ratio"] =
                 new ColumnInfo(name: $"{gen.ToString().ToLower()} frag ratio",
