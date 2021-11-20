@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace realmon.Configuration 
+namespace realmon.Configuration
 {
     internal static class ConfigurationReader
     {
         /// <summary>
-        /// This method parses the configuration based on the given config path. 
+        /// This method parses the configuration based on the given config path.
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
@@ -37,6 +37,7 @@ namespace realmon.Configuration
         /// Validates the configuration by checking for null values for the properties and unregistered columns.
         /// </summary>
         /// <param name="configuration"></param>
+        /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="KeyNotFoundException"></exception>
         public static void ValidateConfiguration(Configuration configuration)
@@ -45,7 +46,7 @@ namespace realmon.Configuration
             if (configuration == null)
             {
                 throw new ArgumentNullException("The configuration is null. Ensure that the YAML syntax is correct.");
-            }    
+            }
 
             if (configuration.Columns == null)
             {
@@ -93,12 +94,12 @@ namespace realmon.Configuration
 
                 if (timer[timer.Length - 1] != 's' && timer[timer.Length - 1] != 'm')
                 {
-                    throw new ArgumentException("The `timer` value should either end with a period type representing character - minutes 'm' or seconds 's'"); 
+                    throw new ArgumentException("The `timer` value should either end with a period type representing character - minutes 'm' or seconds 's'");
                 }
 
                 if (!int.TryParse(timer[0..^1], out int _))
                 {
-                    throw new ArgumentException("The `timer` value should be a number as the period magnitude followed by a period type representing character"); 
+                    throw new ArgumentException("The `timer` value should be a number as the period magnitude followed by a period type representing character");
                 }
             }
         }
