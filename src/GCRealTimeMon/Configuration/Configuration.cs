@@ -23,7 +23,7 @@ namespace realmon.Configuration
         public Dictionary<string, string> StatsMode { get; set; }
 
         /// <summary>
-        /// Display conditions 
+        /// Display conditions for cases such as min gc pause duration.
         /// </summary>
         public Dictionary<string, string> DisplayConditions { get; set; }
     }

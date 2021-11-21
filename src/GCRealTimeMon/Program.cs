@@ -196,7 +196,8 @@ namespace realmon
                 // If the SENTINEL_VALUE passed by force, start the prompt to overwrite the default config.
                 if (string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0)
                 {
-                    return await NewConfigurationManager.CreateAndReturnNewConfiguration(defaultPath);
+                    Configuration.Configuration defaultConfig = await ConfigurationReader.ReadConfigurationAsync(defaultPath);
+                    return await NewConfigurationManager.CreateAndReturnNewConfiguration(defaultPath, defaultConfig);
                 }
 
                 // Validate if the file in the specified path exists.
@@ -232,13 +233,18 @@ namespace realmon
                   .MapResult(async options =>
                   {
                       // If help is asked for / no command line args are specified or The process id / process name isn't specified, display the help text. 
-                      if (args.Length == 0 || options.HelpAsked || (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName)))
+                      if (args.Length == 0 || options.HelpAsked)
                       {
                           Console.WriteLine(CommandLineUtilities.HelpText);
                           return;
                       }
 
                       var configuration = await GetConfiguration(options);
+
+                      if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
+                      {
+
+                      }
 
                       if (options.ProcessId == -1)
                       {

@@ -15,31 +15,69 @@ namespace realmon.Configuration
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static async Task<Configuration> CreateAndReturnNewConfiguration(string path)
+        public static async Task<Configuration> CreateAndReturnNewConfiguration(string path, Configuration defaultConfiguration = null)
         {
             var allColumns = Utilities.ColumnInfoMap.Map.Values.Select(s => $"{s.Name} : {s.Description}");
             // Remove the ``index`` column as it is included by default.
             allColumns = allColumns.Where(s => !s.Contains("index : The GC Index."));
 
             // Column selection.
-            var chosenColumns = Prompt.MultiSelect("Which columns would you like to select?", allColumns);
+            List<string> defaultValuesForColumns = new List<string>();
+            // If the default config is specified, update the prompt with the current default columns selected.
+            if (defaultConfiguration != null)
+            {
+                // Go through all the columns and grab the defaults.  
+                foreach(var c in allColumns)
+                {
+                    foreach(var cc in defaultConfiguration.Columns)
+                    {
+                        // If the column name is in the allColumns containing both the column name and description, add it to the defaults.
+                        if (c.Contains(cc))
+                        {
+                            defaultValuesForColumns.Add(c);
+                        }
+                    }
+                }
+            }
+
+            var chosenColumns = Prompt.MultiSelect(message: "Which columns would you like to select?",
+                                                   items: allColumns,
+                                                   defaultValues: defaultValuesForColumns); 
             var nameOfColumns = chosenColumns.Select(s => s.Split(":").First().Trim());
 
             // Heap stats timer.
             bool shouldSetupTimer = Prompt.Confirm("Would you like to setup the heap stats timer?");
-            Dictionary<string, string> statsHeapDict = new();
+            Dictionary<string, string> statsHeapDict = defaultConfiguration.StatsMode ?? new();
             if (shouldSetupTimer)
             {
-                string timer = Prompt.Input<string>("Enter the period magnitude as an integer and 'm' for minutes / 's' for seconds");
+                // Try to grab the defaults from the specified default config.
+                // Since the stats_mode is optional, check for the existence of the timer.
+                string defaultTimer = null;
+                if (defaultConfiguration.StatsMode != null && 
+                    defaultConfiguration.StatsMode.TryGetValue("timer", out string timerValue))
+                {
+                    defaultTimer = timerValue; 
+                }
+
+                string timer = Prompt.Input<string>(message: "Enter the period magnitude as an integer and 'm' for minutes / 's' for seconds",
+                                                    defaultValue: defaultTimer);
                 statsHeapDict["timer"] = timer;
             }
 
             // Min GC Pause In Msec.
             bool shouldSetupMinGCPauseInMsec = Prompt.Confirm("Would you like to set a value for the minimum GC Pause duration to filter GCs off of?");
-            Dictionary<string, string> displayConditions = new();
+            Dictionary<string, string> displayConditions = defaultConfiguration.DisplayConditions ?? new();
             if (shouldSetupMinGCPauseInMsec)
             {
-                string minGCPauseTime = Prompt.Input<string>("Enter the minimum GC Pause duration value to consider in Msec");
+                string defaultGCPauseDuration = null;
+                if (defaultConfiguration.DisplayConditions != null &&
+                    defaultConfiguration.DisplayConditions.TryGetValue("min gc duration (msec)", out string minDuration))
+                {
+                    defaultGCPauseDuration = minDuration;
+                }
+
+                string minGCPauseTime = Prompt.Input<string>(message: "Enter the minimum GC Pause duration value to consider in Msec",
+                                                             defaultValue: defaultGCPauseDuration);
                 displayConditions["min gc duration (msec)"] = minGCPauseTime;
             }
 
