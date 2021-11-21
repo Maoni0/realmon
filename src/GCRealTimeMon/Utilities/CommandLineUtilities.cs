@@ -11,6 +11,11 @@ namespace realmon.Utilities
         /// </summary>
         public const string SentinelPath = "__SENTINEL_PATH__";
 
+        public const string HelpText = @"Usage:
+- Specify a process Id by using -p or a process name by using -n, the tool will show GCs as they occur in that process. If there are multiple processes with that name it would pick the first one
+- You can specify which info to display per GC by using a config file. You can either change the current config at [fill in the path to DefaultConfig.yaml here] or specify your own by using ""-c config_file_path"", eg, ""-c c:\data\gcmon-config.yaml"" 
+- To create a config file, use -g which allows you to specify a path for the config file and choose which info to display for each GC or overwrite the default config by entering -c without any parameters.";
+
         public static string[] AddSentinelValueForTheConfigPathIfNotSpecified(string[] argsFromCommandLine)
         {
             List<string> listOfArgs = new List<string>(argsFromCommandLine);

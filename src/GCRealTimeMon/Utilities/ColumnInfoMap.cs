@@ -46,7 +46,7 @@ namespace realmon.Utilities
                 // Default Columns
                 { "index", new ColumnInfo(name: "index",
                                           alignment: 10,
-                                          description: "The GC Index",
+                                          description: "The GC Index.",
                                           getColumnValueFromEvent: (traceEvent) => traceEvent.Number )},
 
                 // Additional Columns

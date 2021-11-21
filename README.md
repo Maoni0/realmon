@@ -9,7 +9,6 @@ Right now it's super simple - given a PID or process name it will show you a few
 |-----|-----|-----|
 | n | Name of the Process | Grabs the first process with the name matching that with the one specified with this argument |
 | p | Process Id | Process Id to monitor GC for |
-| m | Minimum Duration in Ms for GC Pause Duration | Any GC Pauses below this specified value will not be written to the console log - this is an optional argument |
 | c | Path of the Configuration File | Path to the configuration file used by the monitor. This file is a YAML file. By default, it's the Default.yaml file is loaded. If no argument is specified, the command line prompt to create the config will be displayed and the default config will be overwritten with the inputted values; this new config will be used for this session. | 
 | g | Path of the New Configuration File | Path to the configuration file that'll be created using a command line prompt, persisted to the given path and used by the monitor for this particular session. This file will be of the YAML format. |
 
@@ -72,6 +71,12 @@ The configuration file is a YAML based file currently with the following section
       - ``"timer" : "5m"  # 5 minutes``
       - ``"timer" : "20s" # 20 seconds``
   - A full example with the Heap printing every 30 seconds can be found [here](tests/GCRealTimeMon.UnitTests/ConfigurationReader/TestConfigurations/DefaultWithStatsMode.yaml)
+- __display_conditions__: Conditions via which info about each GC is displayed.
+  - ``min gc duration (msec)``: Specifying this value will filter GCs with pause durations less than the said value. 
+  - Examples:
+    - ``min gc duration (msec) : 200``
+    - ``min gc duration (msec) : 10.0``
+    - ``min gc duration (msec) : 200.254``
 
 Currently, the available columns are:
 

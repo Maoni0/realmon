@@ -18,6 +18,8 @@ namespace realmon.Configuration
         public static async Task<Configuration> CreateAndReturnNewConfiguration(string path)
         {
             var allColumns = Utilities.ColumnInfoMap.Map.Values.Select(s => $"{s.Name} : {s.Description}");
+            // Remove the ``index`` column as it is included by default.
+            allColumns = allColumns.Where(s => !s.Contains("index : The GC Index."));
 
             // Column selection.
             var chosenColumns = Prompt.MultiSelect("Which columns would you like to select?", allColumns);
@@ -32,6 +34,15 @@ namespace realmon.Configuration
                 statsHeapDict["timer"] = timer;
             }
 
+            // Min GC Pause In Msec.
+            bool shouldSetupMinGCPauseInMsec = Prompt.Confirm("Would you like to set a value for the minimum GC Pause duration to filter GCs off of?");
+            Dictionary<string, string> displayConditions = new();
+            if (shouldSetupMinGCPauseInMsec)
+            {
+                string minGCPauseTime = Prompt.Input<string>("Enter the minimum GC Pause duration value to consider in Msec");
+                displayConditions["min gc duration (msec)"] = minGCPauseTime;
+            }
+
             Configuration configuration = new Configuration
             {
                 Columns = nameOfColumns.ToList(),
@@ -41,6 +52,10 @@ namespace realmon.Configuration
             if (shouldSetupTimer)
             {
                 configuration.StatsMode = statsHeapDict;
+            }
+            if (shouldSetupMinGCPauseInMsec)
+            {
+                configuration.DisplayConditions = displayConditions;
             }
 
             // Validate the configuration before persisting.

@@ -21,5 +21,10 @@ namespace realmon.Configuration
         /// Stats mode properties. 
         /// </summary>
         public Dictionary<string, string> StatsMode { get; set; }
+
+        /// <summary>
+        /// Display conditions 
+        /// </summary>
+        public Dictionary<string, string> DisplayConditions { get; set; }
     }
 }

@@ -102,6 +102,18 @@ namespace realmon.Configuration
                     throw new ArgumentException("The `timer` value should be a number as the period magnitude followed by a period type representing character");
                 }
             }
+
+            // Check for optional display conditions mode.
+            if (configuration.DisplayConditions != null)
+            {
+                if (configuration.DisplayConditions.TryGetValue("min duration (msec)", out var minDuration))
+                {
+                    if (!double.TryParse(minDuration, out _))
+                    {
+                        throw new ArgumentException("The `min duration (msec)` value of the display_conditions has to be a double.");
+                    }
+                }
+            }
         }
     }
 }

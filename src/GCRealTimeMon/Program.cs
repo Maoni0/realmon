@@ -11,7 +11,6 @@ using CommandLine;
 using realmon.Configuration;
 using realmon.Utilities;
 
-
 namespace realmon
 {
     class Program
@@ -30,12 +29,6 @@ namespace realmon
                     HelpText = "The process id for which the GC Monitoring will take place for.")]
             public int ProcessId { get; set; } = -1;
 
-            [Option(shortName: 'm',
-                    longName: "minDurationForGCPauseMSec",
-                    Required = false,
-                    HelpText = "The minimum duration in Ms for GC Pause Duration. Any GCs below this will not be considered.")]
-            public double? MinDurationForGCPausesMSec { get; set; } = null;
-
             [Option(shortName: 'c',
                     longName: "configPath",
                     Required = false,
@@ -47,6 +40,12 @@ namespace realmon
                     Required = false,
                     HelpText = "The path of the config to be created via the command line.")]
             public string PathToNewConfigurationFile { get; set; } = null;
+
+            [Option(shortName: '?',
+                    longName: "\\?",
+                    Required = false,
+                    HelpText = "Display Help.")]
+            public bool HelpAsked { get; set; } = false;
         }
 
         static Timer heapStatsTimer;
@@ -58,7 +57,13 @@ namespace realmon
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
-            double? minDurationForGCPausesInMSec = options.MinDurationForGCPausesMSec;
+            double? minDurationForGCPausesInMSec = null;
+            if (configuration.DisplayConditions != null && 
+                configuration.DisplayConditions.TryGetValue("min gc duration (msec)", out var minDuration))
+            {
+                minDurationForGCPausesInMSec = double.Parse(minDuration);
+            }
+
             Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
             Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
@@ -226,10 +231,11 @@ namespace realmon
                 await Parser.Default.ParseArguments<Options>(args)
                   .MapResult(async options =>
                   {
-                      // The process id / process name must always be provided.
-                      if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
+                      // If help is asked for / no command line args are specified or The process id / process name isn't specified, display the help text. 
+                      if (args.Length == 0 || options.HelpAsked || (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName)))
                       {
-                          throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
+                          Console.WriteLine(CommandLineUtilities.HelpText);
+                          return;
                       }
 
                       var configuration = await GetConfiguration(options);
