@@ -187,7 +187,7 @@ namespace realmon
         //    else if the -c arg is specified (could be a full path name, relative path or file in the current working directory), serialize the file in the path.
         static async Task<Configuration.Configuration> GetConfiguration(Options options)
         {
-            string defaultPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+            string defaultPath = ConfigurationReader.DefaultPath;
 
             // Case: -c was specified.
             if (!string.IsNullOrEmpty(options.PathToConfigurationFile))

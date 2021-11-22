@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -10,6 +11,7 @@ namespace realmon.Configuration
 {
     internal static class ConfigurationReader
     {
+        public static readonly string DefaultPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
         /// <summary>
         /// This method parses the configuration based on the given config path.
         /// </summary>
@@ -106,11 +108,11 @@ namespace realmon.Configuration
             // Check for optional display conditions mode.
             if (configuration.DisplayConditions != null)
             {
-                if (configuration.DisplayConditions.TryGetValue("min duration (msec)", out var minDuration))
+                if (configuration.DisplayConditions.TryGetValue("min gc duration (msec)", out var minDuration))
                 {
                     if (!double.TryParse(minDuration, out _))
                     {
-                        throw new ArgumentException("The `min duration (msec)` value of the display_conditions has to be a double.");
+                        throw new ArgumentException("The `min gc duration (msec)` value of the display_conditions has to be a double.");
                     }
                 }
             }
