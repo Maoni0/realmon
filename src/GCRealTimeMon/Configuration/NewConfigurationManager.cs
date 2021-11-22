@@ -19,7 +19,7 @@ namespace realmon.Configuration
         /// <returns></returns>
         public static async Task<Configuration> CreateAndReturnNewConfiguration(string path, Configuration defaultConfiguration = null)
         {
-            var allColumns = Utilities.ColumnInfoMap.Map.Values.Select(s => $"{s.Name} : {s.Description}");
+            var allColumns = ColumnInfoMap.Map.Values.Select(s => $"{s.Name} : {s.Description}");
             // Remove the ``index`` column as it is included by default.
             allColumns = allColumns.Where(s => !s.Contains("index : The GC Index."));
 
@@ -29,14 +29,15 @@ namespace realmon.Configuration
             if (defaultConfiguration != null)
             {
                 // Go through all the columns and grab the defaults.  
-                foreach(var c in allColumns)
+                foreach(var column in allColumns)
                 {
-                    foreach(var cc in defaultConfiguration.Columns)
+                    string name = column.Split(":")[0].Trim();
+                    foreach(var defaultConfigColumn in defaultConfiguration.Columns)
                     {
                         // If the column name is in the allColumns containing both the column name and description, add it to the defaults.
-                        if (c.Contains(cc))
+                        if (defaultConfiguration.Columns.Contains(name))
                         {
-                            defaultValuesForColumns.Add(c);
+                            defaultValuesForColumns.Add(column);
                         }
                     }
                 }
