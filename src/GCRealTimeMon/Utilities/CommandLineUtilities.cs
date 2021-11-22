@@ -27,7 +27,7 @@ Usage:
 
 More Details:
     - Specify a process Id with -p or a process name with -n to display details of the garbage collection as they occur in that process. If there are multiple processes with that name it would pick the first one.
-    - Displayed columns per GC are defined in a YAML configuration file. It can be changed to a custom one generated with -g or manually select columns with -c.
+    - Displayed columns per GC are defined in a YAML configuration file: {Configuration.ConfigurationReader.DefaultPath}. It can be changed to a custom one generated with -g or manually select columns with -c.
 
 ";
 
