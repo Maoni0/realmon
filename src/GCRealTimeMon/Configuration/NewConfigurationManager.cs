@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using realmon.Utilities;
 using Sharprompt;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -40,10 +42,18 @@ namespace realmon.Configuration
                 }
             }
 
+            // Since SharpPrompt doesn't allow us to configuration the answer as the forms are internal,
+            // the workaround here is to set the answer to the background color of the console so that it appears invisible 
+            // and then manually output it.
+            Prompt.ColorSchema.Answer = Console.BackgroundColor;
             var chosenColumns = Prompt.MultiSelect(message: "Which columns would you like to select?",
                                                    items: allColumns,
-                                                   defaultValues: defaultValuesForColumns); 
+                                                   defaultValues: defaultValuesForColumns);
             var nameOfColumns = chosenColumns.Select(s => s.Split(":").First().Trim());
+            Console.WriteLine($"Chosen Columns:\n{string.Join("\n", nameOfColumns)}\n");
+
+            // Re-configure the color schema of the answer so that the rest of the answers are visible.
+            Prompt.ColorSchema.Answer = ConsoleColor.DarkGreen;
 
             // Heap stats timer.
             bool shouldSetupTimer = Prompt.Confirm("Would you like to setup the heap stats timer?");
@@ -66,6 +76,7 @@ namespace realmon.Configuration
             }
 
             // Min GC Pause In Msec.
+            Console.WriteLine();
             bool shouldSetupMinGCPauseInMsec = Prompt.Confirm("Would you like to set a value for the minimum GC Pause duration to filter GCs off of?");
             Dictionary<string, string> displayConditions = defaultConfiguration?.DisplayConditions ?? new();
             if (shouldSetupMinGCPauseInMsec)
@@ -106,6 +117,21 @@ namespace realmon.Configuration
                                  .Build();
             var serializedResult = serializer.Serialize(configuration);
             await File.WriteAllTextAsync(path: path, contents: serializedResult);
+
+            // Programmatically add the comments to all the columns.
+            string[] lines = await File.ReadAllLinesAsync(path);
+            for(int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                if (ColumnInfoMap.Map.TryGetValue(line.Replace("- ", ""), out var columnInfo))
+                {
+                    lines[i] = line + $" # {columnInfo.Description}";
+                }
+            }
+
+            // Rewrite the file with all the lines.
+            await File.WriteAllLinesAsync(path: path, contents: lines);
+
             return configuration;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using static realmon.Program;
 
 namespace realmon.Utilities
 {

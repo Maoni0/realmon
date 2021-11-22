@@ -33,7 +33,7 @@ namespace realmon
             [Option(shortName: 'c',
                     longName: "configPath",
                     Required = false,
-                    HelpText = "The path to the YAML configuration file that is read in. If no path is specified, the user can create a new config via prompts on the command line.")]
+                    HelpText = "The path to the YAML configuration file that is used in the session; this configuration file contains information such as columns to display that can be configured accordingly. If no path is specified, the default configuration is overwritten by the answers to the prompts in the command line.")]
             public string PathToConfigurationFile { get; set; } = null;
 
             [Option(shortName: 'g',
@@ -261,6 +261,14 @@ namespace realmon
 
                       if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                       {
+                          // If no process details are provided _but_ if the user provides -c without args or -g <path>, don't display help.
+                          if (!string.IsNullOrWhiteSpace(options.PathToNewConfigurationFile) || // User passed: -g <path> 
+                              string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0 // User passed -c without a path.
+                             )
+                          {
+                              return;
+                          }
+
                           DisplayHelp(result, true);
                           return;
                       }

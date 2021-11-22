@@ -141,7 +141,7 @@ namespace realmon.UnitTests
 
             configuration.DisplayConditions = new Dictionary<string, string>
             {
-                { "min duration (msec)" , "ABC"}
+                { "min gc duration (msec)" , "ABC"}
             };
 
             Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
