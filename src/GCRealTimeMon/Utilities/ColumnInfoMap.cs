@@ -21,17 +21,17 @@ namespace realmon.Utilities
         {
             string gen = generation != Gens.GenLargeObj ? generation.ToString().ToLower() : "LOH";
             Map[$"{gen} size (mb)"] =
-                new ColumnInfo(name: $"{gen.ToString().ToLower()} size (mb)",
+                new ColumnInfo(name: $"{gen} size (mb)",
                                format: "N3",
                                description: $"Size of {gen} at the end of this GC in MB.",
                                getColumnValueFromEvent: (traceEvent) => traceEvent.GenSizeAfterMB(generation));
             Map[$"{gen} survival rate"] =
-                new ColumnInfo(name: $"{gen.ToString().ToLower()} survival rate",
+                new ColumnInfo(name: $"{gen} survival rate",
                                format: "N0",
                                description: $"The % of objects in {gen} that survived this GC.",
                                getColumnValueFromEvent: (traceEvent) => traceEvent.SurvivalPercent(generation));
             Map[$"{gen} frag ratio"] =
-                new ColumnInfo(name: $"{gen.ToString().ToLower()} frag ratio",
+                new ColumnInfo(name: $"{gen} frag ratio",
                                format: "N0",
                                description: $"The % of fragmentation on {gen} at the end of this GC.",
                                getColumnValueFromEvent: (traceEvent) => traceEvent.GenFragmentationPercent(generation));
