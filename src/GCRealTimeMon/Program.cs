@@ -32,7 +32,7 @@ namespace realmon
             [Option(shortName: 'c',
                     longName: "configPath",
                     Required = false,
-                    HelpText = "The path to the YAML configuration file that is used in the session; this configuration file contains information such as columns to display that can be configured accordingly. If no path is specified, the default configuration is overwritten by the answers to the prompts in the command line.")]
+HelpText = "The path to the YAML columns configuration file used during the session. If no path is specified, the default configuration is overwritten by the selected column in the prompt.")]
             public string PathToConfigurationFile { get; set; } = null;
 
             [Option(shortName: 'g',
