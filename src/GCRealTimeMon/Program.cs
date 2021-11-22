@@ -180,7 +180,10 @@ namespace realmon
             if (string.IsNullOrEmpty(configurationFile))
             {
                 // the default .yaml file is at the same location as the CLI global tool / console application
-                configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+                var location = Assembly.GetExecutingAssembly().Location;
+                // single file mode doesn't support getting the location of an assembly
+                if (string.IsNullOrEmpty(location)) configurationFile = "DefaultConfig.yaml";
+                else configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
             }
             else
             // ensure that the configuration file given on the command line exists
@@ -237,7 +240,6 @@ namespace realmon
                 )
             {
                 Console.WriteLine(x.Message);
-
                 // exit on argument/configuration errors
             }
         }
