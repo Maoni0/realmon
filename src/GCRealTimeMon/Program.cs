@@ -38,7 +38,7 @@ namespace realmon
             [Option(shortName: 'g',
                     longName: "createConfigPath",
                     Required = false,
-                    HelpText = "The path of the config to be created via the command line prompt.")]
+                    HelpText = "The path of the YAML configuration file to be generated based on the colums selection available in the command prompt.")]
             public string PathToNewConfigurationFile { get; set; } = null;
 
             [Option(shortName: '?',
