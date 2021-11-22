@@ -26,9 +26,8 @@ Usage:
     {ExeName} [command line args]
 
 More Details:
-    - Specify a process Id by using -p or a process name by using -n, the tool will show GCs as they occur in that process. If there are multiple processes with that name it would pick the first one
-    - You can specify which info to display per GC by using a config file. You can either change the current config at ``{Configuration.ConfigurationReader.DefaultPath}`` -- specifically, if you are using this as a dotnet global tool it's the path where gcmon dll is, but if you are using this when you build it yourself, it's the DefaultConfig.yaml where {ExeName} is. Or specify your own by using ""-c config_file_path"", eg, ""-c c:\data\gcmon-config.yaml"" 
-    - To create a config file, use -g which allows you to specify a path for the config file and choose which info to display for each GC or overwrite the default config by entering -c without any parameters. 
+    - Specify a process Id with -p or a process name with -n to display details of the garbage collection as they occur in that process. If there are multiple processes with that name it would pick the first one.
+    - Displayed columns per GC are defined in a YAML configuration file. It can be changed to a custom one generated with -g or manually select columns with -c.
 
 ";
 
