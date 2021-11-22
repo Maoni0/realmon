@@ -10,6 +10,7 @@ using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using CommandLine;
 using realmon.Configuration;
 using realmon.Utilities;
+using CommandLine.Text;
 
 namespace realmon
 {
@@ -20,13 +21,13 @@ namespace realmon
             [Option(shortName: 'n',
                     longName: "processName",
                     Required = false,
-                    HelpText = "The process name for which the GC Monitoring will take place for - the first process is chosen if there are multiple.")]
+                    HelpText = "The process name for which the GC Monitoring will take place for - the first process is chosen if there are multiple. Either this parameter or -p must be passed for the monitoring to begin.")]
             public string ProcessName { get; set; } = null;
 
             [Option(shortName: 'p',
                     longName: "processId",
                     Required = false,
-                    HelpText = "The process id for which the GC Monitoring will take place for.")]
+                    HelpText = "The process id for which the GC Monitoring will take place for. Either this parameter or -n must be passed for the monitoring to begin.")]
             public int ProcessId { get; set; } = -1;
 
             [Option(shortName: 'c',
@@ -38,7 +39,7 @@ namespace realmon
             [Option(shortName: 'g',
                     longName: "createConfigPath",
                     Required = false,
-                    HelpText = "The path of the config to be created via the command line.")]
+                    HelpText = "The path of the config to be created via the command line prompt.")]
             public string PathToNewConfigurationFile { get; set; } = null;
 
             [Option(shortName: '?',
@@ -223,19 +224,36 @@ namespace realmon
             }
         }
 
+        public static void DisplayHelp(ParserResult<Options> parserResults, bool addWrongCommandAndExampleUsage = false)
+        {
+            if (addWrongCommandAndExampleUsage)
+            {
+                Console.WriteLine(CommandLineUtilities.RequiredCommandNotProvided);
+            }
+
+            Console.WriteLine(CommandLineUtilities.UsageDetails);
+            Console.WriteLine(HelpText.AutoBuild<Options>(parserResults, h => h, e => e));
+        }
+
         static async Task Main(string[] args)
         {
             try
             {
                 args = CommandLineUtilities.AddSentinelValueForTheConfigPathIfNotSpecified(args);
 
-                await Parser.Default.ParseArguments<Options>(args)
-                  .MapResult(async options =>
+                var result = Parser.Default.ParseArguments<Options>(args);
+                await result.MapResult(async options =>
                   {
                       // If help is asked for / no command line args are specified or The process id / process name isn't specified, display the help text. 
-                      if (args.Length == 0 || options.HelpAsked)
+                      if (args.Length == 0) 
                       {
-                          Console.WriteLine(CommandLineUtilities.HelpText);
+                          DisplayHelp(result, true);
+                          return;
+                      }
+
+                      if (options.HelpAsked)
+                      {
+                          DisplayHelp(result);
                           return;
                       }
 
@@ -243,7 +261,8 @@ namespace realmon
 
                       if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                       {
-
+                          DisplayHelp(result, true);
+                          return;
                       }
 
                       if (options.ProcessId == -1)
