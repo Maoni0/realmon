@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using realmon.Utilities;
 
-namespace GCRealTimeMon.UnitTests
+namespace realmon.UnitTests
 {
     [TestClass]
     public class AddSentinelValueForTheConfigPathIfNotSpecified

@@ -12,6 +12,7 @@ namespace realmon.Configuration
     internal static class ConfigurationReader
     {
         public static readonly string DefaultPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+
         /// <summary>
         /// This method parses the configuration based on the given config path.
         /// </summary>
@@ -20,11 +21,6 @@ namespace realmon.Configuration
         /// <exception cref="ArgumentNullException"></exception>
         public static async Task<Configuration> ReadConfigurationAsync(string path)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                throw new ArgumentNullException("Path to the Configuration file is null.");
-            }
-
             IDeserializer deserializer = new DeserializerBuilder()
                                             .WithNamingConvention(UnderscoredNamingConvention.Instance)
                                             .Build();

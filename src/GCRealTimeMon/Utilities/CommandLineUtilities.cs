@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using static realmon.Program;
+using System.IO;
+using System.Reflection;
 
 namespace realmon.Utilities
 {
@@ -11,20 +12,22 @@ namespace realmon.Utilities
         /// This is to facilitate the behavior to overwrite the default config based on the inputs of the prompts.
         /// </summary>
         public const string SentinelPath = "__SENTINEL_PATH__";
-        public const string RequiredCommandNotProvided = @"
+        public static readonly string ExeName = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location);
+
+        public static readonly string RequiredCommandNotProvided = @$"
 Required Command was not provided. The monitoring begins only when a process name via -n or a process id via -p is supplied.
 Examples:
-    - GCRealTimeMon.exe -n devenv / dotnet-gcmon -n devenv
-    - GCRealTimeMon.exe -p 1020 / dotnet-gcmon -p 1020
+    - {ExeName} -p 1020 
+    - {ExeName} -n devenv
 ";
 
         public static readonly string UsageDetails = @$"
 Usage:
-    GCRealTimeMon.exe [command line args] / dotnet-gcmon [command line args]
+    {ExeName} [command line args]
 
 More Details:
     - Specify a process Id by using -p or a process name by using -n, the tool will show GCs as they occur in that process. If there are multiple processes with that name it would pick the first one
-    - You can specify which info to display per GC by using a config file. You can either change the current config at ``{Configuration.ConfigurationReader.DefaultPath}`` -- specifically, if you are using this as a dotnet global tool it's the path where gcmon dll is, but if you are using this when you build it yourself, it's the DefaultConfig.yaml where GCRealTimeMon.dll is. Or specify your own by using ""-c config_file_path"", eg, ""-c c:\data\gcmon-config.yaml"" 
+    - You can specify which info to display per GC by using a config file. You can either change the current config at ``{Configuration.ConfigurationReader.DefaultPath}`` -- specifically, if you are using this as a dotnet global tool it's the path where gcmon dll is, but if you are using this when you build it yourself, it's the DefaultConfig.yaml where {ExeName} is. Or specify your own by using ""-c config_file_path"", eg, ""-c c:\data\gcmon-config.yaml"" 
     - To create a config file, use -g which allows you to specify a path for the config file and choose which info to display for each GC or overwrite the default config by entering -c without any parameters. 
 
 ";

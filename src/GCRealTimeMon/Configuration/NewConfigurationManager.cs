@@ -15,10 +15,15 @@ namespace realmon.Configuration
         /// <summary>
         /// Method creates a new configuration based on the user inputs and then persists it to the said path.
         /// </summary>
-        /// <param name="path"></param>
         /// <returns></returns>
         public static async Task<Configuration> CreateAndReturnNewConfiguration(string path, Configuration defaultConfiguration = null)
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                // caught in Main.
+                throw new ArgumentException($"Invalid configuration file path '{path}'");
+            }
+
             var allColumns = ColumnInfoMap.Map.Values.Select(s => $"{s.Name} : {s.Description}");
             // Remove the ``index`` column as it is included by default.
             allColumns = allColumns.Where(s => !s.Contains("index : The GC Index."));
@@ -98,7 +103,7 @@ namespace realmon.Configuration
             Configuration configuration = new Configuration
             {
                 Columns = nameOfColumns.ToList(),
-                AvailableColumns = Utilities.ColumnInfoMap.Map.Keys.ToList()
+                AvailableColumns = ColumnInfoMap.Map.Keys.ToList()
             };
 
             if (shouldSetupTimer)
