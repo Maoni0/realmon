@@ -10,7 +10,7 @@ Right now it's super simple - given a PID or process name it will show you a few
 | n | Name of the Process | Grabs the first process with the name matching that with the one specified with this argument |
 | p | Process Id | Process Id to monitor GC for |
 | c | Path of a YAML configuration File to use | This can be used to override default configuration either through another file or manual column selection that will also update the default when no file is provided. |
-| g | Path of the New Configuration File | Path to the configuration file that'll be created using a command line prompt, persisted to the given path and used by the monitor for this particular session. This file will be of the YAML format. |
+| g | Path of a YAML configuration file to generate | Select the columns to display and the corresponding configuration will be saved to the given YAML file and used for the current monitoring session.|
 
 Note: Either the name of the process or the process id must be specified, else an ``ArgumentException`` is thrown.
 
