@@ -134,6 +134,7 @@ Open ``GCRealTimeMon.sln`` and build it with Visual Studio.
 **Build with command line**
 
 ```bash
+cd src/GCRealTimeMon
 dotnet publish -c Release -r win-x64 # build on Windows
 dotnet publish -c Release -r linux-x64 # build on Linux
 dotnet publish -c Release -r osx-x64 # build on macOS
@@ -143,13 +144,20 @@ Additionaly, you can pass `/p:AotCompilation=true` to build GCRealTimeMon with [
 This requires native C++ toolchain (MSVC or clang) to be installed on the machine.
 
 ```bash
+cd src/GCRealTimeMon
 dotnet publish -c Release -r win-x64 /p:AotCompilation=true # build on Windows
 dotnet publish -c Release -r linux-x64 /p:AotCompilation=true # build on Linux
 dotnet publish -c Release -r osx-x64 /p:AotCompilation=true # build on macOS
 ```
 
-Build artifacts can be found in `bin/Release/net6.0/[rid]/publish`.
+Build artifacts can be found in `bin/Release/netcoreapp3.1/[rid]/publish`.
 
+**Build dotnet-gcmon tool with command line**
+
+```bash
+cd src/dotnet-gcmon
+dotnet build -c Release
+```
 
 ## How to generate the global .NET CLI tool dotnet-gcmon
 
