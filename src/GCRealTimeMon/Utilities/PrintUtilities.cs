@@ -1,14 +1,10 @@
-﻿using Microsoft.Diagnostics.Tracing.Analysis.GC;
-
-using Spectre.Console;
-
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+
+using GCRealTimeMon.Configuration.ConsoleOutput;
+
+using Microsoft.Diagnostics.Tracing.Analysis.GC;
 
 namespace realmon.Utilities
 {
@@ -134,13 +130,13 @@ namespace realmon.Utilities
             List<string> headerColumns = new List<string>(configuration.Columns.Count + 1);
 
             // Add the `index` column.
-            headerColumns.Add($"[bold yellow]GC#[/]");
+            headerColumns.Add(Theme.ToHeader("GC#"));
 
             // Iterate through all columns in the config.
             foreach (var columnName in configuration.Columns)
             {
                 //headerColumns.Add($"{FormatBasedOnColumnName(columnName)}");
-                headerColumns.Add($"[bold yellow]{columnName}[/]");
+                headerColumns.Add(Theme.ToHeader(columnName));
             }
 
             return headerColumns;
@@ -171,95 +167,21 @@ namespace realmon.Utilities
         {
             string color = traceEvent.Generation switch
             {
-                0 => "[skyblue1]",
-                1 => "[lightskyblue1]",
-                2 => "[deepskyblue1]",
+                0 => Theme.Constants.Gen0RowColor,
+                1 => Theme.Constants.Gen1RowColor,
+                2 => Theme.Constants.Gen2RowColor,
                 _ => "[]"
             };
 
             if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
                 // Full Format: {index, alignment: format}
-                //string format = "{0," + columnInfo.Alignment + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}";
                 string format = $"{color}{{0" + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}[/]";
                 string formattedString = string.Format(format, columnInfo.GetColumnValueFromEvent(traceEvent));
                 return formattedString;
             }
 
             throw new ArgumentException($"Column Name: {columnName} not registed in the ColumnInfoMap.");
-        }
-    }
-
-    internal class LiveOutputTable
-    {
-        private readonly Channel<string[]> channel;
-        private readonly Configuration.Configuration configuration;
-        private Task runningLiveTable;
-        private CancellationToken cancellationToken;
-        private CancellationTokenSource cts;
-
-        public LiveOutputTable(Configuration.Configuration configuration)
-        {
-            channel = Channel.CreateUnbounded<string[]>();
-            this.ResetCancellation();
-            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        }
-
-        private void ResetCancellation()
-        {
-            this.cts?.Dispose();
-            this.cts = new CancellationTokenSource();
-            this.cancellationToken = cts.Token;
-        }
-
-        public void StartLive()
-        {
-            Table table = new Table();
-            AddHeaders(table);
-            runningLiveTable = AnsiConsole.Live(table)
-            .StartAsync(async ctx =>
-            {
-                while (!this.cancellationToken.IsCancellationRequested)
-                {
-                    var newRow = await channel.Reader.ReadAsync(this.cancellationToken);
-                    table.AddRow(newRow);
-                    ctx.Refresh();
-                }
-            });
-        }
-
-        private void AddHeaders(Table table)
-        {
-            var header = PrintUtilities.GetHeader2(this.configuration);
-            foreach (var column in header)
-            {
-                table.AddColumn(column);
-            }
-        }
-
-        internal void WriteRow(TraceGC gc, Configuration.Configuration configuration)
-        {
-            List<string> rowDetails = PrintUtilities.GetRowDetails2(gc, configuration);
-            // todo - bad
-            channel.Writer.WriteAsync(rowDetails.ToArray()).AsTask().Wait();
-        }
-
-        internal async Task Stop()
-        {
-            this.cts.Cancel();
-            try
-            {
-                await runningLiveTable;
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
-
-        internal void Restart()
-        {
-            this.ResetCancellation();
-            StartLive();
         }
     }
 }

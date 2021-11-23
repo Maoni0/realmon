@@ -11,6 +11,8 @@ using CommandLine;
 using realmon.Configuration;
 using realmon.Utilities;
 using Spectre.Console;
+using GCRealTimeMon.Configuration.ConsoleOutput;
+using GCRealTimeMon.Utilities;
 
 namespace realmon
 {
@@ -46,23 +48,17 @@ namespace realmon
         static Timer heapStatsTimer;
         static DateTime lastGCTime;
         static TraceGC lastGC;
-        static object writerLock = new object();
         static LiveOutputTable liveOutputTable;
 
         public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration)
         {
-            Console.WriteLine();
             Process process = Process.GetProcessById(pid);
             double? minDurationForGCPausesInMSec = options.MinDurationForGCPausesMSec;
-            var ruleTitle = new Rule($"[bold blue]Monitoring process with name: [silver]{process.ProcessName}[/] and pid: [silver]{pid}[/][/]");
-            ruleTitle.Style = Style.Parse("green1");
-            AnsiConsole.Write(ruleTitle);
 
-            // Todo color header w/ yellow bold and then color rows by generation like I have in the print helper2 methods
-            // Console.WriteLine(PrintUtilities.GetHeader(configuration));
+            ConsoleOut.WriteRule($"[{Theme.Constants.MessageColor}]Monitoring process with name: [{Theme.Constants.HighlightColor}]{process.ProcessName}[/] and pid: [{Theme.Constants.HighlightColor}]{pid}[/][/]");
 
             liveOutputTable = new LiveOutputTable(configuration);
-            liveOutputTable.StartLive();
+            liveOutputTable.Start();
             //Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
             var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out var session);
@@ -87,11 +83,7 @@ namespace realmon
                                 lastGCTime = DateTime.UtcNow;
                                 lastGC = gc;
 
-                                lock (writerLock)
-                                {
-                                    liveOutputTable.WriteRow(gc, configuration);
-                                    //Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
-                                }
+                                liveOutputTable.WriteRow(gc, configuration).Wait();
                             }
                         }
                     };
@@ -128,7 +120,8 @@ namespace realmon
             {
                 if (lastGC != null)
                 {
-                    PrintLastStats();
+                    // Discard the task so that any exception doesn't crash the process but fires the TaskScheduler.UnobservedTaskException event
+                    _ = PrintLastStats();
                 }
             };
 
@@ -139,82 +132,60 @@ namespace realmon
                                        period: period);
         }
 
-        private static void PrintLastStats()
+        private static async Task PrintLastStats()
         {
-            liveOutputTable.Stop().Wait(); // todo async
+            await liveOutputTable.Stop();
+
             if (lastGC == null)
             {
-                Console.WriteLine("No stats collected yet.");
+                ConsoleOut.WriteWarning("No stats collected yet.");
             }
             else
             {
                 var t = lastGC; // capture, since this could tear
                 var s = t.HeapStats;
 
-                const int barWidth = 60;
-                int gen0Width = (int)Math.Round(barWidth * (s.GenerationSize0 / (double)s.TotalHeapSize));
-                int gen1Width = (int)Math.Round(barWidth * (s.GenerationSize1 / (double)s.TotalHeapSize));
-                int gen2Width = (int)Math.Round(barWidth * (s.GenerationSize2 / (double)s.TotalHeapSize));
-                int gen3Width = (int)Math.Round(barWidth * (s.GenerationSize3 / (double)s.TotalHeapSize));
-                int gen4Width = (int)Math.Round(barWidth * (s.GenerationSize4 / (double)s.TotalHeapSize));
+                ConsoleOut.WriteRule();
 
-                lock (writerLock)
-                {
-                    AnsiConsole.Write(new Rule()
-                    {
-                        Style = new Style(Color.Green1)
-                    });
+                Table table = new Table().HideHeaders();
+                table.Title = new TableTitle(string.Format("Heap Stats as of {0:u} (Run {1} for gen {2}):\n", lastGCTime, t.Number, t.Generation));
+                table.AddColumn(new TableColumn("Results"));
+                table.AddRow(
+                    new Table().HideHeaders()
+                    .AddColumn("Name", config => config.Alignment(Justify.Left))
+                    .AddColumn("Value", config => config.Alignment(Justify.Right))
+                    .AddRow(Theme.ToHeader("Heaps:"), string.Format("{0:N0}", t.HeapCount))
+                    .AddRow(Theme.ToHeader("Handles:"), string.Format("{0:N0}", s.GCHandleCount))
+                    .AddRow(Theme.ToHeader("Pinned Obj Count:"), string.Format("{0:N0}", s.PinnedObjectCount)));
 
-                    Table table = new Table().HideHeaders();
-                    table.Title = new TableTitle(string.Format("Heap Stats as of {0:u} (Run {1} for gen {2}):\n", lastGCTime, t.Number, t.Generation));
-                    table.AddColumn(new TableColumn("Results"));
-                    table.AddRow(
-                        new Table().HideHeaders()
-                        .AddColumn("Name", config => config.Alignment(Justify.Left))
-                        .AddColumn("Value", config => config.Alignment(Justify.Right))
-                        .AddRow("[bold yellow]Heaps:[/]", string.Format("{0:N0}", t.HeapCount))
-                        .AddRow("[bold yellow]Handles:[/]", string.Format("{0:N0}", s.GCHandleCount))
-                        .AddRow("[bold yellow]Pinned Obj Count:[/]", string.Format("{0:N0}", s.PinnedObjectCount)));
+                table.AddRow(
+                     new Panel(
+                         new Table().HideHeaders().NoBorder() // lets us render two "rows" for stats table and then breakdown chart
+                         .AddColumn("Col1") // unused and hidden
+                         .AddRow(new Table().HideHeaders()
+                            .AddColumn("Name", config => config.Alignment(Justify.Left))
+                            .AddColumn("Value", config => config.Alignment(Justify.Right))
+                            .AddRow(Theme.TotalHeap, string.Format("{0,17:N0} Bytes", s.TotalHeapSize))
+                            .AddRow(Theme.Gen0Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize0))
+                            .AddRow(Theme.Gen1Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize1))
+                            .AddRow(Theme.Gen2Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize2))
+                            .AddRow(Theme.Gen3Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize3))
+                            .AddRow(Theme.Gen4Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize4)))
+                         .AddRow(new BreakdownChart()
+                            .FullSize()
+                            .Width(60)
+                            .ShowPercentage()
+                             // Todo Ryan - AddItem doesn't take a color string, so how do we use the theme class here?
+                             .AddItem("Gen 0", Math.Round(100 * (s.GenerationSize0 / (double)s.TotalHeapSize), 2), Color.Green1)
+                             .AddItem("Gen 1", Math.Round(100 * (s.GenerationSize1 / (double)s.TotalHeapSize), 2), Color.HotPink)
+                             .AddItem("Gen 2", Math.Round(100 * (s.GenerationSize2 / (double)s.TotalHeapSize), 2), Color.DodgerBlue1)
+                             .AddItem("Gen 3", Math.Round(100 * (s.GenerationSize3 / (double)s.TotalHeapSize), 2), Color.Yellow1)
+                             .AddItem("Gen 4", Math.Round(100 * (s.GenerationSize4 / (double)s.TotalHeapSize), 2), Color.MediumPurple3))
+                      )
+                     .Header(Theme.ToMessage("Last Run Stats:")));
 
-                    table.AddRow(
-                         new Panel(
-                             new Table().HideHeaders().NoBorder()
-                             .AddColumn("Col1")
-                             .AddRow(new Table().HideHeaders()
-                                .AddColumn("Name", config => config.Alignment(Justify.Left))
-                                .AddColumn("Value", config => config.Alignment(Justify.Right))
-                                .AddRow("[bold Silver]Total Heap:[/]", string.Format("{0,17:N0} Bytes", s.TotalHeapSize))
-                                .AddRow("[bold Green1]Gen 0:[/]", string.Format("{0,17:N0} Bytes", s.GenerationSize0))
-                                .AddRow("[bold HotPink]Gen 1:[/]", string.Format("{0,17:N0} Bytes", s.GenerationSize1))
-                                .AddRow("[bold Dodgerblue1]Gen 2:[/]", string.Format("{0,17:N0} Bytes", s.GenerationSize2))
-                                .AddRow("[bold Yellow1]Gen 3:[/]", string.Format("{0,17:N0} Bytes", s.GenerationSize3))
-                                .AddRow("[bold mediumpurple3]Gen 4:[/]", string.Format("{0,17:N0} Bytes", s.GenerationSize4)))
-                             .AddRow(new BreakdownChart()
-                                .FullSize()
-                                .Width(60)
-                                .ShowPercentage()
-                                 .AddItem("Gen 0", Math.Round(100 * (s.GenerationSize0 / (double)s.TotalHeapSize), 2), Color.Green1)
-                                 .AddItem("Gen 1", Math.Round(100 * (s.GenerationSize1 / (double)s.TotalHeapSize), 2), Color.HotPink)
-                                 .AddItem("Gen 2", Math.Round(100 * (s.GenerationSize2 / (double)s.TotalHeapSize), 2), Color.DodgerBlue1)
-                                 .AddItem("Gen 3", Math.Round(100 * (s.GenerationSize3 / (double)s.TotalHeapSize), 2), Color.Yellow1)
-                                 .AddItem("Gen 4", Math.Round(100 * (s.GenerationSize4 / (double)s.TotalHeapSize), 2), Color.MediumPurple3))
-                          )
-                         .Header("[bold blue]Last Run Stats:[/]"));
-
-                    AnsiConsole.Write(table);
-                    AnsiConsole.Write(new Rule()
-                    {
-                        Style = new Style(Color.Green1)
-                    });
-                    //string.Format("    Total Heap: {0:N0} Bytes\n", s.TotalHeapSize) +
-                    //string.Format("      Gen 0: {0,17:N0} Bytes\n", s.GenerationSize0) +
-                    //string.Format("      Gen 1: {0,17:N0} Bytes\n", s.GenerationSize1) +
-                    //string.Format("      Gen 2: {0,17:N0} Bytes\n", s.GenerationSize2) +
-                    //string.Format("      Gen 3: {0,17:N0} Bytes\n", s.GenerationSize3) +
-                    //string.Format("      Gen 4: {0,17:N0} Bytes\n", s.GenerationSize4)
-                    //string.Format(PrintUtilities.HeapStatsLineSeparator);
-                    //));
-                }
+                AnsiConsole.Write(table);
+                ConsoleOut.WriteRule();
             }
 
             liveOutputTable.Restart();
@@ -285,9 +256,7 @@ namespace realmon
                           options.ProcessId = processes[0].Id;
                       }
 
-                      Rule rule = new Rule("[bold blue]press [silver]s[/] for current stats or any other key to exit[/]");
-                      rule.Style = new Style(Color.Green1);
-                      AnsiConsole.Write(rule);
+                      ConsoleOut.WriteRule($"[{Theme.Constants.MessageColor}]press [{Theme.Constants.HighlightColor}]s[/] for current stats or any other key to exit[/]");
 
                       SetupHeapStatsTimerIfEnabled(configuration);
                       RealTimeProcessing(options.ProcessId, options, configuration);
