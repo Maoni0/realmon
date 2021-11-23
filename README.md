@@ -9,8 +9,8 @@ Right now it's super simple - given a PID or process name it will show you a few
 |-----|-----|-----|
 | n | Name of the Process | Grabs the first process with the name matching that with the one specified with this argument |
 | p | Process Id | Process Id to monitor GC for |
-| m | Minimum Duration in Ms for GC Pause Duration | Any GC Pauses below this specified value will not be written to the console log - this is an optional argument |
-| c | Path of the Configuration File | Path to the configuration file used by the monitor. This file is a YAML file. By default, it's the Default.yaml file is loaded | 
+| c | Path of a YAML configuration File to use | This can be used to override default configuration either through another file or manual column selection that will also update the default when no file is provided. |
+| g | Path of a YAML configuration file to generate | Select the columns to display and the corresponding configuration will be saved to the given YAML file and used for the current monitoring session.|
 
 Note: Either the name of the process or the process id must be specified, else an ``ArgumentException`` is thrown.
 
@@ -71,6 +71,12 @@ The configuration file is a YAML based file currently with the following section
       - ``"timer" : "5m"  # 5 minutes``
       - ``"timer" : "20s" # 20 seconds``
   - A full example with the Heap printing every 30 seconds can be found [here](tests/GCRealTimeMon.UnitTests/ConfigurationReader/TestConfigurations/DefaultWithStatsMode.yaml)
+- __display_conditions__: Conditions via which info about each GC is displayed.
+  - ``min gc duration (msec)``: Specifying this value will filter GCs with pause durations less than the said value. 
+  - Examples:
+    - ``min gc duration (msec) : 200``
+    - ``min gc duration (msec) : 10.0``
+    - ``min gc duration (msec) : 200.254``
 
 Currently, the available columns are:
 
@@ -86,7 +92,7 @@ Currently, the available columns are:
 | gen0 alloc (mb)        | Amount allocated in Gen0 since the last GC occurred in MB.                                                                                                                       | `TraceGC.UserAllocated[(int)Gens.Gen0]`                                                   |
 | gen0 alloc rate        | The average allocation rate since the last GC.                                                                                                                                   | `(TraceGC.UserAllocated[(int)Gens.Gen0] * 1000.0) / TraceGC.DurationSinceLastRestartMSec` |
 | peak size (mb)         | The size on entry of this GC (includes fragmentation) in MB.                                                                                                                     | `TraceGC.HeapSizePeakMB`                                                                  |
-| after size (mb)        | The size on exit of thi sGC (includes fragmentation) in MB.                                                                                                                      | `TraceGC.HeapSizeAfterMB`                                                                 |
+| after size (mb)        | The size on exit of this GC (includes fragmentation) in MB.                                                                                                                      | `TraceGC.HeapSizeAfterMB`                                                                 |
 | peak/after             | Peak / After                                                                                                                                                                    | `TraceGC.HeapSizePeakMB / TraceGC.HeapSizeAfterMB`                                        |
 | promoted (mb)          | Memory this GC promoted in MB.                                                                                                                                                   | `TraceGC.PromotedMB`                                                                      |
 | gen0 size (mb)         | Size of gen0 at the end of this GC in MB.                                                                                                                                        | `TraceGC.GenSizeAfterMB(Gens.Gen0)`                                                       |

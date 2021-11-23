@@ -11,18 +11,21 @@ namespace realmon.Utilities
         public ColumnInfo(string name,
                           Func<TraceGC, object> getColumnValueFromEvent,
                           int? alignment = null,
-                          string format = "")
+                          string format = "",
+                          string description = "")
         {
             Name = name;
             // If no alignment is specified, default to the length of the name.
             Alignment = alignment ?? Name.Length;
             GetColumnValueFromEvent = getColumnValueFromEvent;
             Format = format;
+            Description = description;
         }
 
         public string Name   { get; }
         public int Alignment { get; }
         public Func<TraceGC, object> GetColumnValueFromEvent { get; }
         public string Format { get; }
+        public string Description { get; }
     }
 }
