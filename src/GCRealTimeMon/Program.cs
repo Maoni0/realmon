@@ -75,24 +75,27 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             monitorThread.Start();
 
             source.NeedLoadedDotNetRuntimes();
-            source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
+            source.AddCallbackOnProcessStart((TraceProcess proc) =>
             {
-                proc.AddCallbackOnDotNetRuntimeLoad(delegate (TraceLoadedDotNetRuntime runtime)
+                // if the process id doesn't match that of one requested, don't register any runtime events for it.
+                if (proc.ProcessID != pid)
+                {
+                    return;
+                }
+
+                proc.AddCallbackOnDotNetRuntimeLoad((TraceLoadedDotNetRuntime runtime) =>
                 {
                     runtime.GCEnd += delegate (TraceProcess p, TraceGC gc)
                     {
-                        if (p.ProcessID == pid)
+                        // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
+                        if (!minDurationForGCPausesInMSec.HasValue ||
+                            (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                         {
-                            // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
-                            if (!minDurationForGCPausesInMSec.HasValue ||
-                                (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
-                            {
-                                lastGCTime = DateTime.UtcNow;
-                                lastGC = gc;
+                            lastGCTime = DateTime.UtcNow;
+                            lastGC = gc;
 
-                                lock (writerLock) {
-                                    Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
-                                }
+                            lock (writerLock) {
+                                Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
                             }
                         }
                     };
