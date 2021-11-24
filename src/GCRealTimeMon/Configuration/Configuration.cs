@@ -17,19 +17,19 @@ namespace realmon.Configuration
         /// <summary>
         /// All columns available to display. 
         /// </summary>
-        [YamlMember(Description = $"All the Columns Available to Choose From. Please refer to the table via the following link for details about the columns: https://github.com/Maoni0/realmon#configuration")] 
+        [YamlMember(Description = "All the Columns Available to Choose From. Please refer to the table via the following link for details about the columns: https://github.com/Maoni0/realmon#configuration")] 
         public List<string> AvailableColumns { get; set; }
 
         /// <summary>
         /// Stats mode properties. 
         /// </summary>
-        [YamlMember(Description = $"Statistic Mode including timer period for printing Heap Stats.")] 
+        [YamlMember(Description = "Statistic Mode including timer period for printing Heap Stats.")] 
         public Dictionary<string, string> StatsMode { get; set; }
 
         /// <summary>
         /// Display conditions for cases such as min gc pause duration.
         /// </summary>
-        [YamlMember(Description = $"Display conditions such as min gc pause time to display.")] 
+        [YamlMember(Description = "Display conditions such as min gc pause time to display.")] 
         public Dictionary<string, string> DisplayConditions { get; set; }
     }
 }

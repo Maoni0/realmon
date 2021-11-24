@@ -302,7 +302,6 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                 )
             {
                 Console.WriteLine(x.Message);
-
                 // exit on argument/configuration errors
             }
         }

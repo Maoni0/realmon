@@ -11,7 +11,17 @@ namespace realmon.Configuration
 {
     internal static class ConfigurationReader
     {
-        public static readonly string DefaultPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+        public static readonly string DefaultPath;
+
+        static ConfigurationReader()
+        {
+            var location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            // single file mode doesn't support getting the location of an assembly
+            if (string.IsNullOrEmpty(location))
+                DefaultPath = "DefaultConfig.yaml";
+            else
+                DefaultPath = Path.Combine(location, "DefaultConfig.yaml");
+        }
 
         /// <summary>
         /// This method parses the configuration based on the given config path.

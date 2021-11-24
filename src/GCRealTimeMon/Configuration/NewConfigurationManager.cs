@@ -63,7 +63,7 @@ namespace realmon.Configuration
 
             // Heap stats timer.
             bool shouldSetupTimer = Prompt.Confirm("Would you like to setup the heap stats timer?");
-            Dictionary<string, string> statsHeapDict = defaultConfiguration?.StatsMode ?? new();
+            var statsHeapDict = defaultConfiguration?.StatsMode ?? new Dictionary<string, string>();
             if (shouldSetupTimer)
             {
                 // Try to grab the defaults from the specified default config.
@@ -84,7 +84,7 @@ namespace realmon.Configuration
             // Min GC Pause In Msec.
             Console.WriteLine();
             bool shouldSetupMinGCPauseInMsec = Prompt.Confirm("Would you like to set a value for the minimum GC Pause duration to filter GCs off of?");
-            Dictionary<string, string> displayConditions = defaultConfiguration?.DisplayConditions ?? new();
+            var displayConditions = defaultConfiguration?.DisplayConditions ?? new Dictionary<string, string>();
             if (shouldSetupMinGCPauseInMsec)
             {
                 string defaultGCPauseDuration = null;
