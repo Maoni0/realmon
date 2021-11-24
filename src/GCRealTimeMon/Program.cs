@@ -185,7 +185,7 @@ namespace realmon
                 if (string.IsNullOrEmpty(location))
                     configurationFile = "DefaultConfig.yaml";
                 else
-                    configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+                    configurationFile = Path.Combine(location, "DefaultConfig.yaml");
             }
             else
             // ensure that the configuration file given on the command line exists
