@@ -23,13 +23,13 @@ Note: Either the name of the process or the process id must be specified, else a
 ## Example Usage
 
 ```
-C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -p 14028
+GCRealTimeMon -p 14028
 ```
 
 or
 
 ```
-C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -n devenv
+GCRealTimeMon -n devenv
 ```
 
 Example output:
