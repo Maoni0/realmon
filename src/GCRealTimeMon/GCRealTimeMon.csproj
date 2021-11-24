@@ -10,6 +10,7 @@
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.251802" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.74" />
+    <PackageReference Include="Sharprompt" Version="2.3.7" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
   </ItemGroup>
 
@@ -23,6 +24,12 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>GCRealTimeMon.UnitTests</_Parameter1>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Configuration\NewConfigurationManager.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 
 </Project>

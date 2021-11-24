@@ -127,5 +127,47 @@ namespace realmon.UnitTests
             validate.Should().NotThrow<ArgumentNullException>();
             validate.Should().NotThrow<KeyNotFoundException>();
         }
+
+        [TestMethod]
+        public void ValidateConfiguration_DisplayConditionsEnabledWithIncorrectDurationFormat_ShouldThrowArgumentException()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.StatsMode = new Dictionary<string, string>
+            {
+                { "timer", "20m" }
+            };
+
+            configuration.DisplayConditions = new Dictionary<string, string>
+            {
+                { "min gc duration (msec)" , "ABC"}
+            };
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().Throw<ArgumentException>();
+        }
+
+        [TestMethod]
+        public void ValidateConfiguration_DisplayConditionsEnabledWithCorrectDurationFormat_SuccessfulValidation()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.StatsMode = new Dictionary<string, string>
+            {
+                { "timer", "20m" }
+            };
+
+            configuration.DisplayConditions = new Dictionary<string, string>
+            {
+                { "min gc duration (msec)" , "200"}
+            };
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().NotThrow<ArgumentException>();
+            validate.Should().NotThrow<ArgumentNullException>();
+            validate.Should().NotThrow<KeyNotFoundException>();
+        }
     }
 }
