@@ -37,11 +37,12 @@
     <Compile Include="..\GCRealTimeMon\Utilities\PlatformUtilities.cs" Link="Utilities\PlatformUtilities.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\PrintUtilities.cs" Link="Utilities\PrintUtilities.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\CommandLineUtilities.cs" Link="Utilities\CommandLineUtilities.cs" />
+    <Compile Include="..\GCRealTimeMon\CallStackResolution\CallStackManager.cs" Link="CallStackResolution\CallStackManager.cs" />
   </ItemGroup>
 
   <!--add LICENCE.txt file to the package (PackageLicenceUlr no more supported)-->
   <ItemGroup>
-    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath=""/>
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="" />
   </ItemGroup>
 
 
@@ -57,6 +58,10 @@
     <None Include="..\GCRealTimeMon\DefaultConfig.yaml" Pack="true" PackagePath="">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GCRealTimeMon\GCRealTimeMon.csproj" />
   </ItemGroup>
 
 </Project>

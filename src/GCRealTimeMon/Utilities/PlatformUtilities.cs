@@ -1,5 +1,6 @@
 ﻿using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing;
+using Microsoft.Diagnostics.Tracing.Etlx;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Session;
 using System;
@@ -11,12 +12,28 @@ namespace realmon.Utilities
 {
     internal static class PlatformUtilities
     {
-        public static TraceEventDispatcher GetTraceEventDispatcherBasedOnPlatform(int processId, out IDisposable session)
+        public static TraceEventDispatcher GetTraceEventDispatcherBasedOnPlatform(Configuration.Configuration configuration,
+                                                                                  int processId, 
+                                                                                  bool enableCallStacks,
+                                                                                  out IDisposable session)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var traceEventSession = new TraceEventSession($"GCRealMonSession_{Guid.NewGuid()}");
-                traceEventSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Informational, (ulong)ClrTraceEventParser.Keywords.GC);
+
+                // If the user requested call stacks, enable them via the CallStackManager.
+                if (enableCallStacks)
+                {
+                    CallStackResolution.CallStackManager.InitializeAndRegisterCallStacks(configuration: configuration,
+                                                                                         traceEventSession: traceEventSession,
+                                                                                         processId: processId);
+                }
+
+                else
+                {
+                    traceEventSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Informational, (ulong)ClrTraceEventParser.Keywords.GC);
+                }
+
                 session = traceEventSession;
                 return traceEventSession.Source;
             }

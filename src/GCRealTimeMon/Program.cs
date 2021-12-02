@@ -41,6 +41,12 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                     HelpText = "The path of the YAML configuration file to be generated based on the colums selection available in the command prompt.")]
             public string PathToNewConfigurationFile { get; set; } = null;
 
+            [Option(shortName: 's',
+                    longName: "callStacks",
+                    Required = false,
+                    HelpText = "Setting this option will enable call stacks for induced GCs and large object allocations. Getting call stacks will currently only work for Windows and the session must have admin privileges.")]
+            public bool EnableCallStacks { get; set; } = false;
+
             [Option(shortName: '?',
                     longName: "\\?",
                     Required = false,
@@ -68,7 +74,10 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
             Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
-            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out var session);
+            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(configuration: configuration, 
+                                                                                  processId: pid, 
+                                                                                  enableCallStacks: options.EnableCallStacks,
+                                                                                  out var session);
 
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
             Thread monitorThread = new Thread(() => HandleConsoleInput(session)) ;
