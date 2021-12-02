@@ -178,9 +178,26 @@ It is also possible to manually generate the package in Release, by using the fo
 dotnet pack -c Release
 ```
 
+Before you publish the new version to nuget you should test it locally by first uninstalling an existing version 
+
+````bash
+dotnet tool uninstall -g dotnet-gcmon
+````
+
+and then installing the local .nupkg with this command line:
+
+```bash
+dotnet tool install -g dotnet-gcmon --version 0.5.0 --add-source C:\realmon\src\dotnet-gcmon\nupkg\
+```
+
+(replace `0.5.0` with the version you specified in the .csproj and  `C:\realmon` with the name of your dir for the tool)
+
 To publish a new version, upload the new dotnet-gcmon.(version x.y.z).nupkg file to https://www.nuget.org/packages/manage/upload.
+
 After a while, it should appear under https://www.nuget.org/packages/dotnet-gcmon.
+
 At that point, use the following command to install it on a machine:
+
 ```bash
    dotnet tool install -g dotnet-gcmon
 ```
