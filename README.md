@@ -178,7 +178,7 @@ It is also possible to manually generate the package in Release, by using the fo
 dotnet pack -c Release
 ```
 
-Before you publish the new version to nuget you should test it locally by first uninstalling an existing version 
+If you make changes to the global tool you should test it locally by first uninstalling an existing version 
 
 ````bash
 dotnet tool uninstall -g dotnet-gcmon
