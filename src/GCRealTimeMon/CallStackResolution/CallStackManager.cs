@@ -33,6 +33,7 @@ namespace realmon.CallStackResolution
              KernelTraceEventParser.Keywords.None
              );
 
+            // Needed for the GC events + call stacks.
             traceEventSession.EnableProvider(
                 ClrTraceEventParser.ProviderGuid,
                 TraceEventLevel.Verbose, // Verbose needed for call stacks.
@@ -40,6 +41,7 @@ namespace realmon.CallStackResolution
                 ClrTraceEventParser.Keywords.Loader |
                 ClrTraceEventParser.Keywords.Stack));
 
+            // Needed for JIT Compile code that was already compiled. 
             traceEventSession.EnableProvider(ClrRundownTraceEventParser.ProviderGuid, TraceEventLevel.Informational,
                 (ulong)(ClrTraceEventParser.Keywords.Jit |
                 ClrTraceEventParser.Keywords.Loader |
@@ -73,13 +75,13 @@ namespace realmon.CallStackResolution
             var callStack = data.CallStack();
             if (callStack != null)
             {
-                ResolveNativeCode(callStack);
+                ResolveSymbols(callStack);
                 PrintCallStack(callStack);
             }
             Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
         }
 
-        internal static void ResolveNativeCode(TraceCallStack callStack)
+        internal static void ResolveSymbols(TraceCallStack callStack)
         {
             while (callStack != null)
             {
