@@ -12,4 +12,13 @@
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
     <RdXmlFile Include="rd.xml" />
   </ItemGroup>
+  <Target Condition="'$(TargetFramework)' != 'net6.0' and '$(AotCompilation)'=='true'"
+          Name="ConfigureTrimming"
+          BeforeTargets="PrepareForILLink">
+    <ItemGroup>
+      <ManagedAssemblyToLink>
+        <TrimMode>link</TrimMode>
+      </ManagedAssemblyToLink>
+    </ItemGroup>
+  </Target>
 </Project>

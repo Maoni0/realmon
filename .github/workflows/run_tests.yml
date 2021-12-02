@@ -9,7 +9,7 @@ on:
       - '**UnitTests.csproj'
 
 env:
-  DOTNET_VERSION: '6.0.100' # The .NET SDK version to use
+  DOTNET_VERSION: '3.1.x' # The .NET SDK version to use
   TEST_DIR: 'tests/GCRealTimeMon.UnitTests'
 
 jobs:

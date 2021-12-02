@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <RootNamespace>realmon</RootNamespace>
 
@@ -14,7 +14,7 @@
 
   <PropertyGroup>
     <PackageId>dotnet-gcmon</PackageId>
-    <PackageVersion>0.3.0</PackageVersion>
+    <PackageVersion>0.5.0</PackageVersion>
     <Title>dotnet-gcmon</Title>
     <Owners>Maoni0</Owners>
     <Authors>Maoni Stephens</Authors>
@@ -49,7 +49,7 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.251802" />
-    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.73" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.74" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
     <PackageReference Include="Sharprompt" Version="2.3.7" />
   </ItemGroup>
