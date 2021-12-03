@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Sharprompt;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -58,6 +60,20 @@ More Details:
             }
 
             return listOfArgs.ToArray();
+        }
+
+        public static int GetProcessIdIfThereAreMultipleProcesses(Process[] processes)
+        {
+            List<string> processDetails = new List<string>(processes.Length); 
+            foreach(var process in processes)
+            {
+                processDetails.Add($"Pid: {process.Id}");
+            }
+
+            string selectedProcess = Prompt.Select($"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following",
+                processDetails);
+            string pidAsString = selectedProcess.Split(':')[1].Trim();
+            return int.Parse(pidAsString);
         }
     }
 }

@@ -280,12 +280,16 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                               throw new ArgumentException($"No Processes found with name: {options.ProcessName}");
                           }
 
+                          // If multiple processes are found, prompt the user to select one by displaying the PID.
                           if (processes.Length != 1)
                           {
-                              throw new ArgumentException($"Several processes with name: '{options.ProcessName}' have been found.");
+                              options.ProcessId = CommandLineUtilities.GetProcessIdIfThereAreMultipleProcesses(processes);
                           }
 
-                          options.ProcessId = processes[0].Id;
+                          else
+                          {
+                              options.ProcessId = processes[0].Id;
+                          }
                       }
 
                       Console.WriteLine("------- press s for current stats or any other key to exit -------");
