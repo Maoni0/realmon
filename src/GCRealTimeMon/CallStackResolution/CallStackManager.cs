@@ -42,7 +42,7 @@ namespace realmon.CallStackResolution
                 ClrTraceEventParser.Keywords.Stack));
 
             // Needed for JIT Compile code that was already compiled. 
-            traceEventSession.EnableProvider(ClrRundownTraceEventParser.ProviderGuid, TraceEventLevel.Informational,
+            traceEventSession.EnableProvider(ClrRundownTraceEventParser.ProviderGuid, TraceEventLevel.Verbose,
                 (ulong)(ClrTraceEventParser.Keywords.Jit |
                 ClrTraceEventParser.Keywords.Loader |
                 ClrTraceEventParser.Keywords.StartEnumeration));
