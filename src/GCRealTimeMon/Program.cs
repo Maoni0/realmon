@@ -74,6 +74,13 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
             Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
+            Console.CancelKeyPress += (_, e) =>
+            {
+                // Dispose the session.
+                session?.Dispose();
+                // Exit the process.
+                Environment.Exit(0);
+            };
             var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(configuration: configuration, 
                                                                                   processId: pid, 
                                                                                   enableCallStacks: options.EnableCallStacks,
