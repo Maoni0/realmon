@@ -205,8 +205,23 @@ namespace realmon
             // Case: Neither -g nor -c was specified => fall back to the Default config.
             else
             {
+                // Search if there is a file named .gcmon from the current folder to the root of the current folder volume;
+                // If not found, use the default configuration.
+                var currentfolder = new DirectoryInfo(System.Environment.CurrentDirectory);
+                var root = currentfolder.Root;
+                var configPath = Path.Combine(currentfolder.FullName, ".gcmon");
+                bool founded;
+                while ((founded = File.Exists(configPath)) == false && currentfolder != root)
+                {
+                    currentfolder = currentfolder.Parent;
+                    configPath = Path.Combine(currentfolder.FullName, ".gcmon");
+                }
+                if (founded == false)
+                {
+                    configPath = defaultPath;
+                }
                 // the default .yaml file is at the same location as the CLI global tool / console application
-                return await ConfigurationReader.ReadConfigurationAsync(defaultPath);
+                return await ConfigurationReader.ReadConfigurationAsync(configPath);
             }
         }
 
