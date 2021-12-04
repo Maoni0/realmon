@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Management;
 using System.Reflection;
 
 namespace realmon.Utilities
@@ -62,17 +63,72 @@ More Details:
             return listOfArgs.ToArray();
         }
 
+        /// <summary>
+        /// Gets the command line arguments for a particular process. The methodology to get this differs between Windows and Linux/MacOS.
+        /// Either way, requires Root i.e. Admin or sudo privileges.
+        /// </summary>
+        /// <param name="process"></param>
+        /// <returns></returns>
+        internal static string GetCommandLineArguments(this Process process)
+        {
+            if (PlatformUtilities.IsWindows)
+            {
+                string cmdLine = null;
+                using (var searcher = new ManagementObjectSearcher(
+                  $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"))
+                {
+                    using (var matchEnum = searcher.Get().GetEnumerator())
+                    {
+                        if (matchEnum.MoveNext()) // Move to the 1st item.
+                        {
+                            cmdLine = matchEnum.Current["CommandLine"]?.ToString();
+                        }
+                    }
+                }
+                if (cmdLine == null)
+                {
+                    var dummy = process.MainModule; // Provoke exception.
+                }
+
+                return cmdLine;
+            }
+
+            else
+            {
+                return File.ReadAllText($"/proc/{ process.Id }/cmdline");
+            }
+        }
+
+        /// <summary>
+        /// Prompts the user to pick a process if multiple processes with the same name are found.
+        /// A more detailed list of processes (including command line args) is available if the user is in admin/sudo mode.
+        /// </summary>
+        /// <param name="processes"></param>
+        /// <returns></returns>
         public static int GetProcessIdIfThereAreMultipleProcesses(Process[] processes)
         {
+            // We can only obtain the process args if we have sudo / admin privileges.
+            bool isRoot = PlatformUtilities.IsRoot();
+
             List<string> processDetails = new List<string>(processes.Length); 
             foreach(var process in processes)
             {
-                processDetails.Add($"Pid: {process.Id}");
+                if (isRoot)
+                {
+                    processDetails.Add($"Pid: {process.Id} | Arguments: {process.GetCommandLineArguments()}"); 
+                }
+                else
+                {
+                    processDetails.Add($"Pid: {process.Id} ");
+                }
             }
 
-            string selectedProcess = Prompt.Select($"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following",
-                processDetails);
-            string pidAsString = selectedProcess.Split(':')[1].Trim();
+            string multiprocessPrompt = isRoot ?
+                $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below"
+                : $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below. \nNote: To view the command line arguments for the process, you have to be in admin/sudo mode.";
+
+            string selectedProcess = Prompt.Select(multiprocessPrompt, processDetails);
+            string pidAsString = selectedProcess.Split('|')[0].Split(':')[1].Trim();
             return int.Parse(pidAsString);
         }
     }
