@@ -19,7 +19,15 @@ namespace realmon.CallStackResolution
                                                                           int processId)
         {
             // TODO: Add configurations for the Symbol Reader Text Output path and the NT_SymbolPath.
-            m_symbolReader = new SymbolReader(TextWriter.Null, SymbolPath.SymbolPathFromEnvironment); 
+            string symbolPath = SymbolPath.SymbolPathFromEnvironment;
+
+            // If _NT_SYMBOL_PATH isn't set, force it to default to the one mentioned in the README of the project.
+            if (string.IsNullOrWhiteSpace(symbolPath))
+            {
+                symbolPath = @";SRV*C:\Symbols*https://msdl.microsoft.com/download/symbols;SRV*C:\Symbols*https://nuget.smbsrc.net;SRV*C:\Symbols*https://referencesource.microsoft.com/symbols";
+            }
+
+            m_symbolReader = new SymbolReader(TextWriter.Null, symbolPath); 
             m_symbolReader.SecurityCheck = path => true;
 
             // Setup the additional providers needed for the enabling of the callstacks.
@@ -37,24 +45,31 @@ namespace realmon.CallStackResolution
             traceEventSession.EnableProvider(
                 ClrTraceEventParser.ProviderGuid,
                 TraceEventLevel.Verbose, // Verbose needed for call stacks.
-                (ulong)(ClrTraceEventParser.Keywords.GC |
-                ClrTraceEventParser.Keywords.Loader |
+                (ulong)(ClrTraceEventParser.Keywords.GC                |
+                ClrTraceEventParser.Keywords.Loader                    |
                 ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
-                ClrTraceEventParser.Keywords.JITSymbols |
-                ClrTraceEventParser.Keywords.Jit |
-                ClrTraceEventParser.Keywords.StartEnumeration |
-                ClrTraceEventParser.Keywords.NGen |
-                ClrTraceEventParser.Keywords.MethodDiagnostic |
+                ClrTraceEventParser.Keywords.JITSymbols                |
+                ClrTraceEventParser.Keywords.JitTracing                |
+                ClrTraceEventParser.Keywords.Jit                       |
+                ClrTraceEventParser.Keywords.Codesymbols               |
+                ClrTraceEventParser.Keywords.Interop                   |
+                ClrTraceEventParser.Keywords.NGen                      |
+                ClrTraceEventParser.Keywords.MethodDiagnostic          |
                 ClrTraceEventParser.Keywords.Stack));
 
             // Needed for JIT Compile code that was already compiled. 
             traceEventSession.EnableProvider(ClrRundownTraceEventParser.ProviderGuid, TraceEventLevel.Verbose,
-                (ulong)(ClrTraceEventParser.Keywords.Jit |
-                ClrTraceEventParser.Keywords.Loader |
-                ClrTraceEventParser.Keywords.NGen |
-                ClrTraceEventParser.Keywords.JITSymbols |
+                (ulong)(ClrTraceEventParser.Keywords.Jit               |
+                ClrTraceEventParser.Keywords.Loader                    |
                 ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
-                ClrTraceEventParser.Keywords.MethodDiagnostic |
+                ClrTraceEventParser.Keywords.JITSymbols                |
+                ClrTraceEventParser.Keywords.Jit                       |
+                ClrTraceEventParser.Keywords.JitTracing                |
+                ClrTraceEventParser.Keywords.Codesymbols               |
+                ClrTraceEventParser.Keywords.Interop                   |
+                ClrTraceEventParser.Keywords.GC                        |
+                ClrTraceEventParser.Keywords.NGen                      |
+                ClrTraceEventParser.Keywords.MethodDiagnostic          |
                 ClrTraceEventParser.Keywords.StartEnumeration));
 
             // Subscribe to the requested events.
@@ -69,9 +84,8 @@ namespace realmon.CallStackResolution
 
             traceLogEventSource.TraceLog.Clr.GCAllocationTick += (GCAllocationTickTraceData traceEvent) =>
             {
-                if (traceEvent.AllocationKind == GCAllocationKind.Large /**&& processId == traceEvent.ProcessID**/)
+                if (traceEvent.AllocationKind == GCAllocationKind.Large && traceEvent.ProcessID == processId)
                 {
-                    Console.WriteLine($"ProcessName: {traceEvent.ProcessName}");
                     PrintCallStack(traceEvent, configuration);
                 }
             };

@@ -74,6 +74,10 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
             Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
+            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(configuration: configuration, 
+                                                                                  processId: pid, 
+                                                                                  enableCallStacks: options.EnableCallStacks,
+                                                                                  out var session);
             Console.CancelKeyPress += (_, e) =>
             {
                 // Dispose the session.
@@ -81,10 +85,6 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                 // Exit the process.
                 Environment.Exit(0);
             };
-            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(configuration: configuration, 
-                                                                                  processId: pid, 
-                                                                                  enableCallStacks: options.EnableCallStacks,
-                                                                                  out var session);
 
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
             Thread monitorThread = new Thread(() => HandleConsoleInput(session)) ;
