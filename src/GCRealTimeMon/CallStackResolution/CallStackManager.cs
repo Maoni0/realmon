@@ -39,12 +39,22 @@ namespace realmon.CallStackResolution
                 TraceEventLevel.Verbose, // Verbose needed for call stacks.
                 (ulong)(ClrTraceEventParser.Keywords.GC |
                 ClrTraceEventParser.Keywords.Loader |
+                ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
+                ClrTraceEventParser.Keywords.JITSymbols |
+                ClrTraceEventParser.Keywords.Jit |
+                ClrTraceEventParser.Keywords.StartEnumeration |
+                ClrTraceEventParser.Keywords.NGen |
+                ClrTraceEventParser.Keywords.MethodDiagnostic |
                 ClrTraceEventParser.Keywords.Stack));
 
             // Needed for JIT Compile code that was already compiled. 
             traceEventSession.EnableProvider(ClrRundownTraceEventParser.ProviderGuid, TraceEventLevel.Verbose,
                 (ulong)(ClrTraceEventParser.Keywords.Jit |
                 ClrTraceEventParser.Keywords.Loader |
+                ClrTraceEventParser.Keywords.NGen |
+                ClrTraceEventParser.Keywords.JITSymbols |
+                ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
+                ClrTraceEventParser.Keywords.MethodDiagnostic |
                 ClrTraceEventParser.Keywords.StartEnumeration));
 
             // Subscribe to the requested events.
@@ -59,8 +69,9 @@ namespace realmon.CallStackResolution
 
             traceLogEventSource.TraceLog.Clr.GCAllocationTick += (GCAllocationTickTraceData traceEvent) =>
             {
-                if (traceEvent.AllocationKind == GCAllocationKind.Large && processId == traceEvent.ProcessID)
+                if (traceEvent.AllocationKind == GCAllocationKind.Large /**&& processId == traceEvent.ProcessID**/)
                 {
+                    Console.WriteLine($"ProcessName: {traceEvent.ProcessName}");
                     PrintCallStack(traceEvent, configuration);
                 }
             };
