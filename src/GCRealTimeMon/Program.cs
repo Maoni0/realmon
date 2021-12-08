@@ -10,6 +10,7 @@ using CommandLine;
 using realmon.Configuration;
 using realmon.Utilities;
 using CommandLine.Text;
+using realmon.Service;
 
 namespace realmon
 {
@@ -53,10 +54,8 @@ HelpText = "The path to the YAML columns configuration file used during the sess
         static TraceGC lastGC;
         static object writerLock = new object();
 
-        public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration)
+        public static void RealTimeProcessing(int pid, Configuration.Configuration configuration)
         {
-            Console.WriteLine();
-            Process process = Process.GetProcessById(pid);
             double? minDurationForGCPausesInMSec = null;
             if (configuration.DisplayConditions != null && 
                 configuration.DisplayConditions.TryGetValue("min gc duration (msec)", out var minDuration))
@@ -64,11 +63,9 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                 minDurationForGCPausesInMSec = double.Parse(minDuration);
             }
 
-            Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
-            Console.WriteLine(PrintUtilities.GetHeader(configuration));
-            Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
+            IGCRealTimeMonResult result = GCRealTimeMonService.Instance.Value.Initialize(pid: pid, configuration: configuration);
+            IDisposable session = result.Source;
 
-            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out var session);
             Console.CancelKeyPress += (_, e) =>
             {
                 // Dispose the session.
@@ -78,36 +75,22 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             };
 
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
-            Thread monitorThread = new Thread(() => HandleConsoleInput(session)) ;
+            Thread monitorThread = new Thread(() => HandleConsoleInput(result)) ;
             monitorThread.Start();
 
-            source.NeedLoadedDotNetRuntimes();
-            source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
+            // Life time of the process is the same as that of this disposable => never dispose.
+            IDisposable subscriptionHandle = result.GCEndObservable.Subscribe(gc =>
             {
-                proc.AddCallbackOnDotNetRuntimeLoad(delegate (TraceLoadedDotNetRuntime runtime)
+                lastGCTime = DateTime.UtcNow;
+                lastGC = gc;
+                lock (writerLock)
                 {
-                    runtime.GCEnd += delegate (TraceProcess p, TraceGC gc)
-                    {
-                        if (p.ProcessID == pid)
-                        {
-                            // If no min duration is specified or if the min duration specified is less than the pause duration, log the event.
-                            if (!minDurationForGCPausesInMSec.HasValue ||
-                                (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
-                            {
-                                lastGCTime = DateTime.UtcNow;
-                                lastGC = gc;
-
-                                lock (writerLock) {
-                                    Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
-                                }
-                            }
-                        }
-                    };
-                });
+                    Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
+                }
             });
 
             // blocking call on the main thread until the session gets disposed upon user action
-            source.Process();
+            result.Source.Process();
         }
 
         private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration)
@@ -176,7 +159,7 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             }
         }
 
-        static void HandleConsoleInput(IDisposable session)
+        static void HandleConsoleInput(IGCRealTimeMonResult session)
         {
             var k = Console.ReadKey(true);
 
@@ -295,10 +278,17 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                           options.ProcessId = processes[0].Id;
                       }
 
+                      Console.WriteLine();
+                      int pid = options.ProcessId;
+                      Process process = Process.GetProcessById(pid);
                       Console.WriteLine("------- press s for current stats or any other key to exit -------");
 
+                      Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
+                      Console.WriteLine(PrintUtilities.GetHeader(configuration));
+                      Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
+
                       SetupHeapStatsTimerIfEnabled(configuration);
-                      RealTimeProcessing(options.ProcessId, options, configuration);
+                      RealTimeProcessing(pid, configuration);
                   },
                   errors => Task.FromResult(errors)
                   );
