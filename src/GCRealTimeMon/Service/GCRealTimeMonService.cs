@@ -65,13 +65,12 @@ namespace realmon.Service
             {
                 m_gcEndSubject = gcEndSubject;
                 Source = source;
-                Session = session;
+                m_session = session;
             }
 
             private bool disposedValue;
 
             public IObservable<TraceGC> GCEndObservable => m_gcEndSubject;
-            public IDisposable Session { get; }
             public TraceEventDispatcher Source { get; } 
 
             private void Dispose(bool disposing)
@@ -81,7 +80,7 @@ namespace realmon.Service
                 if (!disposedValue)
                 {
                     Source?.Dispose();
-                    Session?.Dispose();
+                    m_session?.Dispose();
                     m_gcEndSubject = null;
                     disposedValue = true;
                 }
