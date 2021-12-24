@@ -66,6 +66,42 @@ namespace realmon.UnitTests
         }
 
         [TestMethod]
+        public async Task ReadConfigurationAsync_ReadDefaultWithStatsModeAndDisplayConditions_SuccessfullyParsed()
+        {
+            string defaultPath = Path.Combine(TestConfigurationPath, "DefaultWithStatsModeAndDisplayConditions.yaml");
+            Configuration.Configuration configuration = await ConfigurationReader.ReadConfigurationAsync(defaultPath);
+            configuration.Should().NotBeNull();
+
+            // Check Columns.
+            configuration.Columns.Should().NotBeNull();
+            configuration.Columns.Should().Contain("type");
+            configuration.Columns.Should().Contain("gen");
+            configuration.Columns.Should().Contain("pause (ms)");
+            configuration.Columns.Should().Contain("reason");
+
+            // Check Available Columns.
+            configuration.AvailableColumns.Should().NotBeNull();
+            configuration.AvailableColumns.Should().Contain("type");
+            configuration.AvailableColumns.Should().Contain("gen");
+            configuration.AvailableColumns.Should().Contain("pause (ms)");
+            configuration.AvailableColumns.Should().Contain("reason");
+
+            // Check Stats Mode.
+            configuration.StatsMode.Should().NotBeNull();
+            configuration.StatsMode.Should().ContainKeys("timer");
+            configuration.StatsMode["timer"].Should().NotBeNull();
+            int.TryParse(configuration.StatsMode["timer"][0..^1], out var _).Should().BeTrue();
+            bool conditionForPeriodType = configuration.StatsMode["timer"][^1] == 'm' || configuration.StatsMode["timer"][^1] == 's';
+            conditionForPeriodType.Should().BeTrue();
+
+            // Check Display Conditions.
+            configuration.DisplayConditions.Should().NotBeNull();
+            configuration.DisplayConditions.Should().ContainKeys("min gc duration (msec)");
+            configuration.DisplayConditions["min gc duration (msec)"].Should().NotBeNull();
+            double.TryParse(configuration.DisplayConditions["min gc duration (msec)"], out var _).Should().BeTrue();
+        }
+
+        [TestMethod]
         public async Task ReadConfigurationAsync_NoColumns_ShouldThrowNullReferenceException()
         {
             string path = Path.Combine(TestConfigurationPath, "NoColumns.yaml");
@@ -96,5 +132,6 @@ namespace realmon.UnitTests
             Func<Task> validate = async () => await ConfigurationReader.ReadConfigurationAsync(path);
             await validate.Should().ThrowAsync<KeyNotFoundException>();
         }
+
     }
 }

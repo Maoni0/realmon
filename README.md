@@ -9,8 +9,8 @@ Right now it's super simple - given a PID or process name it will show you a few
 |-----|-----|-----|
 | n | Name of the Process | Grabs the first process with the name matching that with the one specified with this argument |
 | p | Process Id | Process Id to monitor GC for |
-| m | Minimum Duration in Ms for GC Pause Duration | Any GC Pauses below this specified value will not be written to the console log - this is an optional argument |
-| c | Path of the Configuration File | Path to the configuration file used by the monitor. This file is a YAML file. By default, it's the Default.yaml file is loaded | 
+| c | Path of a YAML configuration File to use | This can be used to override default configuration either through another file or manual column selection that will also update the default when no file is provided. |
+| g | Path of a YAML configuration file to generate | Select the columns to display and the corresponding configuration will be saved to the given YAML file and used for the current monitoring session.|
 
 Note: Either the name of the process or the process id must be specified, else an ``ArgumentException`` is thrown.
 
@@ -23,13 +23,13 @@ Note: Either the name of the process or the process id must be specified, else a
 ## Example Usage
 
 ```
-C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -p 14028
+GCRealTimeMon -p 14028
 ```
 
 or
 
 ```
-C:\realmon\src\windows\bin\x64\Release\net5.0>GCRealTimeMon -n devenv
+GCRealTimeMon -n devenv
 ```
 
 Example output:
@@ -71,6 +71,12 @@ The configuration file is a YAML based file currently with the following section
       - ``"timer" : "5m"  # 5 minutes``
       - ``"timer" : "20s" # 20 seconds``
   - A full example with the Heap printing every 30 seconds can be found [here](tests/GCRealTimeMon.UnitTests/ConfigurationReader/TestConfigurations/DefaultWithStatsMode.yaml)
+- __display_conditions__: Conditions via which info about each GC is displayed.
+  - ``min gc duration (msec)``: Specifying this value will filter GCs with pause durations less than the said value. 
+  - Examples:
+    - ``min gc duration (msec) : 200``
+    - ``min gc duration (msec) : 10.0``
+    - ``min gc duration (msec) : 200.254``
 
 Currently, the available columns are:
 
@@ -86,7 +92,7 @@ Currently, the available columns are:
 | gen0 alloc (mb)        | Amount allocated in Gen0 since the last GC occurred in MB.                                                                                                                       | `TraceGC.UserAllocated[(int)Gens.Gen0]`                                                   |
 | gen0 alloc rate        | The average allocation rate since the last GC.                                                                                                                                   | `(TraceGC.UserAllocated[(int)Gens.Gen0] * 1000.0) / TraceGC.DurationSinceLastRestartMSec` |
 | peak size (mb)         | The size on entry of this GC (includes fragmentation) in MB.                                                                                                                     | `TraceGC.HeapSizePeakMB`                                                                  |
-| after size (mb)        | The size on exit of thi sGC (includes fragmentation) in MB.                                                                                                                      | `TraceGC.HeapSizeAfterMB`                                                                 |
+| after size (mb)        | The size on exit of this GC (includes fragmentation) in MB.                                                                                                                      | `TraceGC.HeapSizeAfterMB`                                                                 |
 | peak/after             | Peak / After                                                                                                                                                                    | `TraceGC.HeapSizePeakMB / TraceGC.HeapSizeAfterMB`                                        |
 | promoted (mb)          | Memory this GC promoted in MB.                                                                                                                                                   | `TraceGC.PromotedMB`                                                                      |
 | gen0 size (mb)         | Size of gen0 at the end of this GC in MB.                                                                                                                                        | `TraceGC.GenSizeAfterMB(Gens.Gen0)`                                                       |
@@ -134,6 +140,7 @@ Open ``GCRealTimeMon.sln`` and build it with Visual Studio.
 **Build with command line**
 
 ```bash
+cd src/GCRealTimeMon
 dotnet publish -c Release -r win-x64 # build on Windows
 dotnet publish -c Release -r linux-x64 # build on Linux
 dotnet publish -c Release -r osx-x64 # build on macOS
@@ -143,13 +150,20 @@ Additionaly, you can pass `/p:AotCompilation=true` to build GCRealTimeMon with [
 This requires native C++ toolchain (MSVC or clang) to be installed on the machine.
 
 ```bash
+cd src/GCRealTimeMon
 dotnet publish -c Release -r win-x64 /p:AotCompilation=true # build on Windows
 dotnet publish -c Release -r linux-x64 /p:AotCompilation=true # build on Linux
 dotnet publish -c Release -r osx-x64 /p:AotCompilation=true # build on macOS
 ```
 
-Build artifacts can be found in `bin/Release/net6.0/[rid]/publish`.
+Build artifacts can be found in `bin/Release/netcoreapp3.1/[rid]/publish`.
 
+**Build dotnet-gcmon tool with command line**
+
+```bash
+cd src/dotnet-gcmon
+dotnet build -c Release
+```
 
 ## How to generate the global .NET CLI tool dotnet-gcmon
 
@@ -164,9 +178,26 @@ It is also possible to manually generate the package in Release, by using the fo
 dotnet pack -c Release
 ```
 
+If you make changes to the global tool you should test it locally by first uninstalling an existing version 
+
+````bash
+dotnet tool uninstall -g dotnet-gcmon
+````
+
+and then installing the local .nupkg with this command line:
+
+```bash
+dotnet tool install -g dotnet-gcmon --version 0.5.0 --add-source C:\realmon\src\dotnet-gcmon\nupkg\
+```
+
+(replace `0.5.0` with the version you specified in the .csproj and  `C:\realmon` with the name of your dir for the tool)
+
 To publish a new version, upload the new dotnet-gcmon.(version x.y.z).nupkg file to https://www.nuget.org/packages/manage/upload.
+
 After a while, it should appear under https://www.nuget.org/packages/dotnet-gcmon.
+
 At that point, use the following command to install it on a machine:
+
 ```bash
    dotnet tool install -g dotnet-gcmon
 ```

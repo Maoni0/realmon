@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -10,6 +11,18 @@ namespace realmon.Configuration
 {
     internal static class ConfigurationReader
     {
+        public static readonly string DefaultPath;
+
+        static ConfigurationReader()
+        {
+            var location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            // single file mode doesn't support getting the location of an assembly
+            if (string.IsNullOrEmpty(location))
+                DefaultPath = "DefaultConfig.yaml";
+            else
+                DefaultPath = Path.Combine(location, "DefaultConfig.yaml");
+        }
+
         /// <summary>
         /// This method parses the configuration based on the given config path.
         /// </summary>
@@ -18,12 +31,12 @@ namespace realmon.Configuration
         /// <exception cref="ArgumentNullException"></exception>
         public static async Task<Configuration> ReadConfigurationAsync(string path)
         {
-            IDeserializer deserialier = new DeserializerBuilder()
+            IDeserializer deserializer = new DeserializerBuilder()
                                             .WithNamingConvention(UnderscoredNamingConvention.Instance)
                                             .Build();
 
             string configContents = await File.ReadAllTextAsync(path);
-            Configuration configuration = deserialier.Deserialize<Configuration>(configContents);
+            Configuration configuration = deserializer.Deserialize<Configuration>(configContents);
             ValidateConfiguration(configuration);
             return await Task.FromResult(configuration);
         }
@@ -95,6 +108,18 @@ namespace realmon.Configuration
                 if (!int.TryParse(timer[0..^1], out int _))
                 {
                     throw new ArgumentException("The `timer` value should be a number as the period magnitude followed by a period type representing character");
+                }
+            }
+
+            // Check for optional display conditions mode.
+            if (configuration.DisplayConditions != null)
+            {
+                if (configuration.DisplayConditions.TryGetValue("min gc duration (msec)", out var minDuration))
+                {
+                    if (!double.TryParse(minDuration, out _))
+                    {
+                        throw new ArgumentException("The `min gc duration (msec)` value of the display_conditions has to be a double.");
+                    }
                 }
             }
         }

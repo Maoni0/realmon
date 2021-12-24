@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Analysis;
@@ -23,26 +22,32 @@ namespace realmon
             [Option(shortName: 'n',
                     longName: "processName",
                     Required = false,
-                    HelpText = "The process name for which the GC Monitoring will take place for - the first process is chosen if there are multiple.")]
+                    HelpText = "The process name for which the GC Monitoring will take place for - the first process is chosen if there are multiple. Either this parameter or -p must be passed for the monitoring to begin.")]
             public string ProcessName { get; set; } = null;
 
             [Option(shortName: 'p',
                     longName: "processId",
                     Required = false,
-                    HelpText = "The process id for which the GC Monitoring will take place for.")]
+                    HelpText = "The process id for which the GC Monitoring will take place for. Either this parameter or -n must be passed for the monitoring to begin.")]
             public int ProcessId { get; set; } = -1;
-
-            [Option(shortName: 'm',
-                    longName: "minDurationForGCPauseMSec",
-                    Required = false,
-                    HelpText = "The minimum duration in Ms for GC Pause Duration. Any GCs below this will not be considered.")]
-            public double? MinDurationForGCPausesMSec { get; set; } = null;
 
             [Option(shortName: 'c',
                     longName: "configPath",
                     Required = false,
-                    HelpText = "The path to the YAML configuration file that is read in.")]
+HelpText = "The path to the YAML columns configuration file used during the session. If no path is specified, the default configuration is overwritten by the selected column in the prompt.")]
             public string PathToConfigurationFile { get; set; } = null;
+
+            [Option(shortName: 'g',
+                    longName: "createConfigPath",
+                    Required = false,
+                    HelpText = "The path of the YAML configuration file to be generated based on the colums selection available in the command prompt.")]
+            public string PathToNewConfigurationFile { get; set; } = null;
+
+            [Option(shortName: '?',
+                    longName: "\\?",
+                    Required = false,
+                    HelpText = "Display Help.")]
+            public bool HelpAsked { get; set; } = false;
         }
 
         static Timer heapStatsTimer;
@@ -53,15 +58,26 @@ namespace realmon
         public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration)
         {
             Process process = Process.GetProcessById(pid);
-            double? minDurationForGCPausesInMSec = options.MinDurationForGCPausesMSec;
+            double? minDurationForGCPausesInMSec = null;
+            if (configuration.DisplayConditions != null && 
+                configuration.DisplayConditions.TryGetValue("min gc duration (msec)", out var minDuration))
+            {
+                minDurationForGCPausesInMSec = double.Parse(minDuration);
+            }
 
             ConsoleOut.WriteRule($"[{Theme.Constants.MessageColor}]Monitoring process with name: [{Theme.Constants.HighlightColor}]{process.ProcessName}[/] and pid: [{Theme.Constants.HighlightColor}]{pid}[/][/]");
 
             liveOutputTable = new LiveOutputTable(configuration);
             liveOutputTable.Start();
-            //Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
 
             var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out var session);
+            Console.CancelKeyPress += (_, e) =>
+            {
+                // Dispose the session.
+                session?.Dispose();
+                // Exit the process.
+                Environment.Exit(0);
+            };
 
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
             Thread monitorThread = new Thread(() => HandleConsoleInput(session));
@@ -204,41 +220,95 @@ namespace realmon
         }
 
         // Compute the path to the configuration file:
-        //    given by -c on the command line (could be a full path name, relative path or file in the current working directory)
-        //    or use the default .yaml file in the tool folder
+        //    if no path is specified, use the default .yaml file in the tool folder.
+        //    else if the -c arg is specified (could be a full path name, relative path or file in the current working directory), serialize the file in the path.
         static async Task<Configuration.Configuration> GetConfiguration(Options options)
         {
-            var configurationFile = options.PathToConfigurationFile;
+            string defaultPath = ConfigurationReader.DefaultPath;
 
-            if (string.IsNullOrEmpty(configurationFile))
+            // Case: -c was specified.
+            if (!string.IsNullOrEmpty(options.PathToConfigurationFile))
+            {
+                string configurationFile = options.PathToConfigurationFile;
+
+                // If the SENTINEL_VALUE passed by force, start the prompt to overwrite the default config.
+                if (string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0)
+                {
+                    Configuration.Configuration defaultConfig = await ConfigurationReader.ReadConfigurationAsync(defaultPath);
+                    return await NewConfigurationManager.CreateAndReturnNewConfiguration(defaultPath, defaultConfig);
+                }
+
+                // Validate if the file in the specified path exists.
+                if (!File.Exists(configurationFile))
+                {
+                    throw new ArgumentException($"The given configuration file '{configurationFile}' does not exist...");
+                }
+
+                return await ConfigurationReader.ReadConfigurationAsync(configurationFile);
+            }
+
+            // Case: -g was specified.
+            else if (!string.IsNullOrEmpty(options.PathToNewConfigurationFile))
+            {
+                return await NewConfigurationManager.CreateAndReturnNewConfiguration(options.PathToNewConfigurationFile);
+            }
+
+            // Case: Neither -g nor -c was specified => fall back to the Default config.
+            else
             {
                 // the default .yaml file is at the same location as the CLI global tool / console application
-                configurationFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DefaultConfig.yaml");
+                return await ConfigurationReader.ReadConfigurationAsync(defaultPath);
             }
-            else
-            // ensure that the configuration file given on the command line exists
-            if (!File.Exists(configurationFile))
+        }
+
+        public static void DisplayHelp(ParserResult<Options> parserResults, bool addWrongCommandAndExampleUsage = false)
+        {
+            if (addWrongCommandAndExampleUsage)
             {
-                throw new ArgumentException($"The given configuration file '{configurationFile}' does not exist...");
+                Console.WriteLine(CommandLineUtilities.RequiredCommandNotProvided);
             }
 
-            var configuration = await ConfigurationReader.ReadConfigurationAsync(configurationFile);
-            return configuration;
+            Console.WriteLine(CommandLineUtilities.UsageDetails);
+            Console.WriteLine(HelpText.AutoBuild<Options>(parserResults, h => h, e => e));
         }
 
         static async Task Main(string[] args)
         {
             try
             {
-                await Parser.Default.ParseArguments<Options>(args)
-                  .MapResult(async options =>
+                args = CommandLineUtilities.AddSentinelValueForTheConfigPathIfNotSpecified(args);
+
+                var result = Parser.Default.ParseArguments<Options>(args);
+                await result.MapResult(async options =>
                   {
-                      if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
+                      // If help is asked for / no command line args are specified or The process id / process name isn't specified, display the help text. 
+                      if (args.Length == 0) 
                       {
-                          throw new ArgumentException("Specify a process Id using: -p or a process name by using -n.");
+                          DisplayHelp(result, true);
+                          return;
+                      }
+
+                      if (options.HelpAsked)
+                      {
+                          DisplayHelp(result);
+                          return;
                       }
 
                       var configuration = await GetConfiguration(options);
+
+                      if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
+                      {
+                          // If no process details are provided _but_ if the user provides -c without args or -g <path>, don't display help.
+                          if (!string.IsNullOrWhiteSpace(options.PathToNewConfigurationFile) || // User passed: -g <path> 
+                              string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0 // User passed -c without a path.
+                             )
+                          {
+                              return;
+                          }
+
+                          DisplayHelp(result, true);
+                          return;
+                      }
 
                       if (options.ProcessId == -1)
                       {
@@ -270,7 +340,6 @@ namespace realmon
                 )
             {
                 Console.WriteLine(x.Message);
-
                 // exit on argument/configuration errors
             }
         }

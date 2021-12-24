@@ -15,7 +15,7 @@ namespace realmon.Utilities
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var traceEventSession = new TraceEventSession("MySession");
+                var traceEventSession = new TraceEventSession($"GCRealMonSession_{Guid.NewGuid()}");
                 traceEventSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Informational, (ulong)ClrTraceEventParser.Keywords.GC);
                 session = traceEventSession;
                 return traceEventSession.Source;
