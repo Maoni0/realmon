@@ -12,6 +12,7 @@ using realmon.Utilities;
 using Spectre.Console;
 using GCRealTimeMon.Configuration.ConsoleOutput;
 using GCRealTimeMon.Utilities;
+using CommandLine.Text;
 
 namespace realmon
 {
@@ -34,7 +35,7 @@ namespace realmon
             [Option(shortName: 'c',
                     longName: "configPath",
                     Required = false,
-HelpText = "The path to the YAML columns configuration file used during the session. If no path is specified, the default configuration is overwritten by the selected column in the prompt.")]
+                    HelpText = "The path to the YAML columns configuration file used during the session. If no path is specified, the default configuration is overwritten by the selected column in the prompt.")]
             public string PathToConfigurationFile { get; set; } = null;
 
             [Option(shortName: 'g',
