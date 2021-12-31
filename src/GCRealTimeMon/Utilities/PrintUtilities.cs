@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-using GCRealTimeMon.Configuration.ConsoleOutput;
+using GCRealTimeMon.Configuration;
 
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
 
@@ -24,12 +24,34 @@ namespace realmon.Utilities
             stringBuilder.Append($"GC#{FormatBasedOnColumnName("index")} |");
 
             // Iterate through all columns in the config.
-            foreach (var columnName in configuration.Columns)
+            foreach(var columnName in configuration.Columns)
             {
                 stringBuilder.Append($" {FormatBasedOnColumnName(columnName)} |");
             }
 
             return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the header of the monitor table based on the configuration.
+        /// </summary>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public static List<string> GetHeaderList(Configuration.Configuration configuration)
+        {
+            List<string> headerColumns = new List<string>(configuration.Columns.Count + 1);
+
+            // Add the `index` column.
+            headerColumns.Add(Theme.ToHeader("GC#"));
+
+            // Iterate through all columns in the config.
+            foreach(var columnName in configuration.Columns)
+            {
+                //headerColumns.Add($"{FormatBasedOnColumnName(columnName)}");
+                headerColumns.Add(Theme.ToHeader(columnName));
+            }
+
+            return headerColumns;
         }
 
         /// <summary>
@@ -43,16 +65,16 @@ namespace realmon.Utilities
             int repeatCount = 5; // GC#, | and extra 3 spaces.
             repeatCount += ColumnInfoMap.Map["index"].Alignment;
 
-            foreach (var column in configuration.Columns)
+            foreach(var column in configuration.Columns)
             {
-                if (ColumnInfoMap.Map.TryGetValue(column, out var columnInfo))
+                if(ColumnInfoMap.Map.TryGetValue(column, out var columnInfo))
                 {
                     repeatCount += columnInfo.Alignment + 3; // +3 is for the | and the enclosing space.
                 }
             }
 
             string lineSeparator = "";
-            for (int i = 0; i < repeatCount; i++)
+            for(int i = 0; i < repeatCount; i++)
             {
                 lineSeparator = string.Concat(lineSeparator, "-");
             }
@@ -68,7 +90,7 @@ namespace realmon.Utilities
         /// <exception cref="ArgumentException"></exception>
         public static string FormatBasedOnColumnName(string columnName)
         {
-            if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
+            if(ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
                 string format = "{0," + columnInfo.Alignment + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}";
                 string formattedString = string.Format(format, columnName);
@@ -91,12 +113,33 @@ namespace realmon.Utilities
             stringBuilder.Append($"GC#{FormatBasedOnColumnAndGCEvent(traceEvent, "index")} |");
 
             // Iterate through all columns in the config.
-            foreach (var columnName in configuration.Columns)
+            foreach(var columnName in configuration.Columns)
             {
                 stringBuilder.Append($" {FormatBasedOnColumnAndGCEvent(traceEvent, columnName)} |");
             }
 
             return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the a list of strings that'll be printed based on a trace event and the configuration. Each string in the list is for a column in configuration.Columns.
+        /// </summary>
+        /// <param name="traceEvent"></param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
+        public static List<string> GetRowDetailsList(TraceGC traceEvent, Configuration.Configuration configuration)
+        {
+            List<string> rowDetails = new List<string>();
+            // Add the `index` column.
+            rowDetails.Add($"{FormatThemeBasedOnColumnAndGCEvent(traceEvent, "index")}");
+
+            // Iterate through all columns in the config.
+            foreach(var columnName in configuration.Columns)
+            {
+                rowDetails.Add($" {FormatThemeBasedOnColumnAndGCEvent(traceEvent, columnName)}");
+            }
+
+            return rowDetails;
         }
 
         /// <summary>
@@ -108,7 +151,7 @@ namespace realmon.Utilities
         /// <exception cref="ArgumentException"></exception>
         public static string FormatBasedOnColumnAndGCEvent(TraceGC traceEvent, string columnName)
         {
-            if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
+            if(ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
                 // Full Format: {index, alignment: format}
                 string format = "{0," + columnInfo.Alignment + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}";
@@ -116,54 +159,17 @@ namespace realmon.Utilities
                 return formattedString;
             }
 
-            throw new ArgumentException($"Column Name: {columnName} not registed in the ColumnInfoMap.");
-        }
-
-
-        /// <summary>
-        /// Gets the header of the monitor table based on the configuration.
-        /// </summary>
-        /// <param name="configuration"></param>
-        /// <returns></returns>
-        public static List<string> GetHeader2(Configuration.Configuration configuration)
-        {
-            List<string> headerColumns = new List<string>(configuration.Columns.Count + 1);
-
-            // Add the `index` column.
-            headerColumns.Add(Theme.ToHeader("GC#"));
-
-            // Iterate through all columns in the config.
-            foreach (var columnName in configuration.Columns)
-            {
-                //headerColumns.Add($"{FormatBasedOnColumnName(columnName)}");
-                headerColumns.Add(Theme.ToHeader(columnName));
-            }
-
-            return headerColumns;
+            throw new ArgumentException($"Column Name: {columnName} not registered in the ColumnInfoMap.");
         }
 
         /// <summary>
-        /// Gets the string that'll be printed based on a trace event and the configuration.
+        /// Returns a formatted string of the GC event in the specified column that uses the color theming defined by <see cref="Theme"/>
         /// </summary>
         /// <param name="traceEvent"></param>
-        /// <param name="configuration"></param>
+        /// <param name="columnName"></param>
         /// <returns></returns>
-        public static List<string> GetRowDetails2(TraceGC traceEvent, Configuration.Configuration configuration)
-        {
-            List<string> rowDetails = new List<string>();
-            // Add the `index` column.
-            rowDetails.Add($"{FormatBasedOnColumnAndGCEvent2(traceEvent, "index")}");
-
-            // Iterate through all columns in the config.
-            foreach (var columnName in configuration.Columns)
-            {
-                rowDetails.Add($" {FormatBasedOnColumnAndGCEvent2(traceEvent, columnName)}");
-            }
-
-            return rowDetails;
-        }
-
-        public static string FormatBasedOnColumnAndGCEvent2(TraceGC traceEvent, string columnName)
+        /// <exception cref="ArgumentException"></exception>
+        public static string FormatThemeBasedOnColumnAndGCEvent(TraceGC traceEvent, string columnName)
         {
             string color = traceEvent.Generation switch
             {
@@ -173,15 +179,15 @@ namespace realmon.Utilities
                 _ => "[]"
             };
 
-            if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
+            if(ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
-                // Full Format: {index, alignment: format}
+                // No alignment here as that is taken care of by the table formatting
                 string format = $"{color}{{0" + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}[/]";
                 string formattedString = string.Format(format, columnInfo.GetColumnValueFromEvent(traceEvent));
                 return formattedString;
             }
 
-            throw new ArgumentException($"Column Name: {columnName} not registed in the ColumnInfoMap.");
+            throw new ArgumentException($"Column Name: {columnName} not registered in the ColumnInfoMap.");
         }
     }
 }

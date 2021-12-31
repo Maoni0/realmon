@@ -1,11 +1,8 @@
-﻿namespace GCRealTimeMon.Configuration.ConsoleOutput
+﻿namespace GCRealTimeMon.Configuration
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-
+    /// <summary>
+    /// Constants used for spectre console output theming.
+    /// </summary>
     internal static class Theme
     {
         public static string ToHeader(string headerName) => $"[bold {Constants.GCTableHeaderColor}]{headerName}[/]";
@@ -21,7 +18,8 @@
         public static string Gen3Heap = $"[bold {Constants.Gen3HeapColor}]Gen 3:[/]";
         public static string Gen4Heap = $"[bold {Constants.Gen4HeapColor}]Gen 4:[/]";
 
-        // todo - allow yaml config?
+        // Future - these could be configurable via yaml
+        // Color reference: https://spectreconsole.net/appendix/colors
         internal class Constants
         {
             public const string MessageColor = "bold blue";
@@ -37,10 +35,10 @@
             public const string Gen2RowColor = "[deepskyblue1]";
 
             public const string TotalHeapColor = "silver";
-            public const string Gen0HeapColor = "Green1";
-            public const string Gen1HeapColor = "HotPink";
-            public const string Gen2HeapColor = "Dodgerblue1";
-            public const string Gen3HeapColor = "Yellow1";
+            public const string Gen0HeapColor = "green1";
+            public const string Gen1HeapColor = "hotpink";
+            public const string Gen2HeapColor = "dodgerblue1";
+            public const string Gen3HeapColor = "yellow1";
             public const string Gen4HeapColor = "mediumpurple3";
         }
     }

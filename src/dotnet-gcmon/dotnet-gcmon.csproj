@@ -30,7 +30,7 @@
   <ItemGroup>
     <Compile Include="..\GCRealTimeMon\Configuration\Configuration.cs" Link="Configuration\Configuration.cs" />
     <Compile Include="..\GCRealTimeMon\Configuration\ConfigurationReader.cs" Link="Configuration\ConfigurationReader.cs" />
-    <Compile Include="..\GCRealTimeMon\Configuration\ConsoleOutput\ThemeConstants.cs" Link="ThemeConstants.cs" />
+    <Compile Include="..\GCRealTimeMon\Configuration\Theme.cs" Link="Theme.cs" />
     <Compile Include="..\GCRealTimeMon\Configuration\NewConfigurationManager.cs" Link="Configuration\NewConfigurationManager.cs" />
     <Compile Include="..\GCRealTimeMon\Program.cs" Link="Program.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\ColumnInfo.cs" Link="Utilities\ColumnInfo.cs" />
@@ -53,6 +53,7 @@
     <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.251802" />
     <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.74" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
+    <PackageReference Include="Sharprompt" Version="2.3.7" />
     <PackageReference Include="Spectre.Console" Version="0.42.0" />
   </ItemGroup>
 

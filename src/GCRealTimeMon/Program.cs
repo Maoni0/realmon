@@ -10,7 +10,7 @@ using CommandLine;
 using realmon.Configuration;
 using realmon.Utilities;
 using Spectre.Console;
-using GCRealTimeMon.Configuration.ConsoleOutput;
+using GCRealTimeMon.Configuration;
 using GCRealTimeMon.Utilities;
 using CommandLine.Text;
 
@@ -51,16 +51,16 @@ namespace realmon
             public bool HelpAsked { get; set; } = false;
         }
 
-        static Timer heapStatsTimer;
         static DateTime lastGCTime;
         static TraceGC lastGC;
         static LiveOutputTable liveOutputTable;
 
         public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration)
         {
+            Console.WriteLine();
             Process process = Process.GetProcessById(pid);
             double? minDurationForGCPausesInMSec = null;
-            if (configuration.DisplayConditions != null && 
+            if (configuration.DisplayConditions != null &&
                 configuration.DisplayConditions.TryGetValue("min gc duration (msec)", out var minDuration))
             {
                 minDurationForGCPausesInMSec = double.Parse(minDuration);
@@ -81,8 +81,8 @@ namespace realmon
             };
 
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
-            Thread monitorThread = new Thread(() => HandleConsoleInput(session));
-            monitorThread.Start();
+            Task.Run(async () => await HandleConsoleInputAsync(session));
+
 
             source.NeedLoadedDotNetRuntimes();
             source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
@@ -100,7 +100,7 @@ namespace realmon
                                 lastGCTime = DateTime.UtcNow;
                                 lastGC = gc;
 
-                                liveOutputTable.WriteRow(gc, configuration).Wait();
+                                _ = liveOutputTable.WriteRowAsync(gc);
                             }
                         }
                     };
@@ -133,25 +133,24 @@ namespace realmon
                 _ => throw new NotImplementedException()
             };
 
-            TimerCallback timerCallback = (_) =>
-            {
-                if (lastGC != null)
-                {
-                    // Discard the task so that any exception doesn't crash the process but fires the TaskScheduler.UnobservedTaskException event
-                    _ = PrintLastStats();
-                }
-            };
-
             // If ``stats_mode`` is enabled, the lifetime of this timer should be that of the process.
-            heapStatsTimer = new Timer(callback: timerCallback,
-                                       dueTime: 0,
-                                       state: null,
-                                       period: period);
+            _ = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (lastGC != null)
+                    {
+                        await PrintLastStatsAsync();
+                    }
+
+                    await Task.Delay(period);
+                }
+            });
         }
 
-        private static async Task PrintLastStats()
+        private static async Task PrintLastStatsAsync()
         {
-            await liveOutputTable.Stop();
+            await liveOutputTable.StopAsync();
 
             if (lastGC == null)
             {
@@ -166,11 +165,11 @@ namespace realmon
 
                 Table table = new Table().HideHeaders();
                 table.Title = new TableTitle(string.Format("Heap Stats as of {0:u} (Run {1} for gen {2}):\n", lastGCTime, t.Number, t.Generation));
-                table.AddColumn(new TableColumn("Results"));
+                table.AddColumn(new TableColumn("Results")); // name is hidden
                 table.AddRow(
                     new Table().HideHeaders()
-                    .AddColumn("Name", config => config.Alignment(Justify.Left))
-                    .AddColumn("Value", config => config.Alignment(Justify.Right))
+                    .AddColumn("Name", config => config.Alignment(Justify.Left)) // name is hidden
+                    .AddColumn("Value", config => config.Alignment(Justify.Right)) // name is hidden
                     .AddRow(Theme.ToHeader("Heaps:"), string.Format("{0:N0}", t.HeapCount))
                     .AddRow(Theme.ToHeader("Handles:"), string.Format("{0:N0}", s.GCHandleCount))
                     .AddRow(Theme.ToHeader("Pinned Obj Count:"), string.Format("{0:N0}", s.PinnedObjectCount)));
@@ -178,10 +177,10 @@ namespace realmon
                 table.AddRow(
                      new Panel(
                          new Table().HideHeaders().NoBorder() // lets us render two "rows" for stats table and then breakdown chart
-                         .AddColumn("Col1") // unused and hidden
+                         .AddColumn("Col1") // name is hidden
                          .AddRow(new Table().HideHeaders()
-                            .AddColumn("Name", config => config.Alignment(Justify.Left))
-                            .AddColumn("Value", config => config.Alignment(Justify.Right))
+                            .AddColumn("Name", config => config.Alignment(Justify.Left)) // name is hidden
+                            .AddColumn("Value", config => config.Alignment(Justify.Right)) // name is hidden
                             .AddRow(Theme.TotalHeap, string.Format("{0,17:N0} Bytes", s.TotalHeapSize))
                             .AddRow(Theme.Gen0Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize0))
                             .AddRow(Theme.Gen1Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize1))
@@ -192,7 +191,8 @@ namespace realmon
                             .FullSize()
                             .Width(60)
                             .ShowPercentage()
-                             // Todo Ryan - AddItem doesn't take a color string, so how do we use the theme class here?
+                             // Future - if we want these to be configurable via yaml, we may need to look into adding Color.Parse(string) to Spectre.Console Color class so we can turn
+                             // config in Themes.cs into Color objects here.
                              .AddItem("Gen 0", Math.Round(100 * (s.GenerationSize0 / (double)s.TotalHeapSize), 2), Color.Green1)
                              .AddItem("Gen 1", Math.Round(100 * (s.GenerationSize1 / (double)s.TotalHeapSize), 2), Color.HotPink)
                              .AddItem("Gen 2", Math.Round(100 * (s.GenerationSize2 / (double)s.TotalHeapSize), 2), Color.DodgerBlue1)
@@ -208,13 +208,13 @@ namespace realmon
             liveOutputTable.Restart();
         }
 
-        static void HandleConsoleInput(IDisposable session)
+        static async Task HandleConsoleInputAsync(IDisposable session)
         {
             var k = Console.ReadKey(true);
 
             while (k.Key == ConsoleKey.S)
             {
-                PrintLastStats();
+                await PrintLastStatsAsync();
                 k = Console.ReadKey(true);
             }
             session.Dispose();
@@ -283,7 +283,7 @@ namespace realmon
                 await result.MapResult(async options =>
                   {
                       // If help is asked for / no command line args are specified or The process id / process name isn't specified, display the help text. 
-                      if (args.Length == 0) 
+                      if (args.Length == 0)
                       {
                           DisplayHelp(result, true);
                           return;
