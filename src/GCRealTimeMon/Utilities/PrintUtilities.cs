@@ -45,7 +45,6 @@ namespace realmon.Utilities
             // Iterate through all columns in the config.
             foreach (var columnName in configuration.Columns)
             {
-                //headerColumns.Add($"{FormatBasedOnColumnName(columnName)}");
                 headerColumns.Add(Theme.ToHeader(columnName));
             }
 

@@ -82,7 +82,6 @@ namespace realmon
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
             Task.Run(async () => await HandleConsoleInputAsync(session));
 
-
             source.NeedLoadedDotNetRuntimes();
             source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
             {

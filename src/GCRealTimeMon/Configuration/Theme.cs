@@ -20,7 +20,7 @@
 
         // Future - these could be configurable via yaml
         // Color reference: https://spectreconsole.net/appendix/colors
-        internal class Constants
+        internal static class Constants
         {
             public const string MessageColor = "bold blue";
             public const string MessageRuleColor = "green1";
