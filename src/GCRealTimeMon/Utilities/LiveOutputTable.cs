@@ -6,13 +6,9 @@
     using System.Threading;
     using System.Threading.Channels;
     using System.Threading.Tasks;
-
     using Microsoft.Diagnostics.Tracing.Analysis.GC;
-
     using realmon.Utilities;
-
     using Spectre.Console;
-
     using Configuration = realmon.Configuration.Configuration;
 
     /// <summary>
@@ -55,7 +51,7 @@
             runningLiveTableTask = AnsiConsole.Live(table)
             .StartAsync(async ctx =>
             {
-                while(!ct.IsCancellationRequested)
+                while (!ct.IsCancellationRequested)
                 {
                     IList<string> newRow = await channel.Reader.ReadAsync(ct);
                     table.AddRow(newRow.Select(str => new Markup(str)));
@@ -75,7 +71,7 @@
             {
                 await runningLiveTableTask;
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
             }
         }
@@ -109,7 +105,7 @@
         private void AddHeaders(Table table)
         {
             var header = PrintUtilities.GetHeaderList(this.configuration);
-            foreach(var column in header)
+            foreach (var column in header)
             {
                 table.AddColumn(column);
             }
@@ -117,9 +113,9 @@
 
         protected virtual void Dispose(bool disposing)
         {
-            if(!disposed)
+            if (!disposed)
             {
-                if(disposing)
+                if (disposing)
                 {
                     this.cts.Dispose();
                 }

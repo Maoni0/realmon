@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
+using CommandLine;
+using CommandLine.Text;
+using GCRealTimeMon.Configuration;
+using GCRealTimeMon.Utilities;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using CommandLine;
 using realmon.Configuration;
 using realmon.Utilities;
 using Spectre.Console;
-using GCRealTimeMon.Configuration;
-using GCRealTimeMon.Utilities;
-using CommandLine.Text;
 
 namespace realmon
 {

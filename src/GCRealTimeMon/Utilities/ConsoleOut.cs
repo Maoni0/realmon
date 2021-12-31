@@ -1,7 +1,6 @@
 ﻿namespace GCRealTimeMon.Utilities
 {
     using GCRealTimeMon.Configuration;
-
     using Spectre.Console;
 
     /// <summary>

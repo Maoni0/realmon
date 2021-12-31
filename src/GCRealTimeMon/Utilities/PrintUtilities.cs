@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
 using GCRealTimeMon.Configuration;
-
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
 
 namespace realmon.Utilities
@@ -24,7 +22,7 @@ namespace realmon.Utilities
             stringBuilder.Append($"GC#{FormatBasedOnColumnName("index")} |");
 
             // Iterate through all columns in the config.
-            foreach(var columnName in configuration.Columns)
+            foreach (var columnName in configuration.Columns)
             {
                 stringBuilder.Append($" {FormatBasedOnColumnName(columnName)} |");
             }
@@ -45,7 +43,7 @@ namespace realmon.Utilities
             headerColumns.Add(Theme.ToHeader("GC#"));
 
             // Iterate through all columns in the config.
-            foreach(var columnName in configuration.Columns)
+            foreach (var columnName in configuration.Columns)
             {
                 //headerColumns.Add($"{FormatBasedOnColumnName(columnName)}");
                 headerColumns.Add(Theme.ToHeader(columnName));
@@ -65,16 +63,16 @@ namespace realmon.Utilities
             int repeatCount = 5; // GC#, | and extra 3 spaces.
             repeatCount += ColumnInfoMap.Map["index"].Alignment;
 
-            foreach(var column in configuration.Columns)
+            foreach (var column in configuration.Columns)
             {
-                if(ColumnInfoMap.Map.TryGetValue(column, out var columnInfo))
+                if (ColumnInfoMap.Map.TryGetValue(column, out var columnInfo))
                 {
                     repeatCount += columnInfo.Alignment + 3; // +3 is for the | and the enclosing space.
                 }
             }
 
             string lineSeparator = "";
-            for(int i = 0; i < repeatCount; i++)
+            for (int i = 0; i < repeatCount; i++)
             {
                 lineSeparator = string.Concat(lineSeparator, "-");
             }
@@ -90,7 +88,7 @@ namespace realmon.Utilities
         /// <exception cref="ArgumentException"></exception>
         public static string FormatBasedOnColumnName(string columnName)
         {
-            if(ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
+            if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
                 string format = "{0," + columnInfo.Alignment + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}";
                 string formattedString = string.Format(format, columnName);
@@ -113,7 +111,7 @@ namespace realmon.Utilities
             stringBuilder.Append($"GC#{FormatBasedOnColumnAndGCEvent(traceEvent, "index")} |");
 
             // Iterate through all columns in the config.
-            foreach(var columnName in configuration.Columns)
+            foreach (var columnName in configuration.Columns)
             {
                 stringBuilder.Append($" {FormatBasedOnColumnAndGCEvent(traceEvent, columnName)} |");
             }
@@ -134,7 +132,7 @@ namespace realmon.Utilities
             rowDetails.Add($"{FormatThemeBasedOnColumnAndGCEvent(traceEvent, "index")}");
 
             // Iterate through all columns in the config.
-            foreach(var columnName in configuration.Columns)
+            foreach (var columnName in configuration.Columns)
             {
                 rowDetails.Add($" {FormatThemeBasedOnColumnAndGCEvent(traceEvent, columnName)}");
             }
@@ -151,7 +149,7 @@ namespace realmon.Utilities
         /// <exception cref="ArgumentException"></exception>
         public static string FormatBasedOnColumnAndGCEvent(TraceGC traceEvent, string columnName)
         {
-            if(ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
+            if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
                 // Full Format: {index, alignment: format}
                 string format = "{0," + columnInfo.Alignment + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}";
@@ -179,7 +177,7 @@ namespace realmon.Utilities
                 _ => "[]"
             };
 
-            if(ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
+            if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
                 // No alignment here as that is taken care of by the table formatting
                 string format = $"{color}{{0" + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}[/]";
