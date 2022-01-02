@@ -7,6 +7,8 @@
     <IlcTrimMetadata>true</IlcTrimMetadata>
     <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
   </PropertyGroup>
   <ItemGroup Condition="'$(AotCompilation)'=='true'">
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />

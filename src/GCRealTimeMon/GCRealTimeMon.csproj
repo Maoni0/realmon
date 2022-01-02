@@ -32,4 +32,8 @@
     </Compile>
   </ItemGroup>
 
+  <ItemGroup>
+    <TrimmerRootAssembly Include="GCRealTimeMon" />
+  </ItemGroup>
+
 </Project>
