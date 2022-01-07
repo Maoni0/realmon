@@ -6,6 +6,7 @@ using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using Microsoft.Diagnostics.Tracing.Session;
 using realmon.Utilities;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace realmon.CallStackResolution
@@ -42,6 +43,7 @@ namespace realmon.CallStackResolution
              );
 
             // Needed for the GC events + call stacks.
+            TraceEventProviderOptions options = new TraceEventProviderOptions() { ProcessIDFilter = new[] { processId }};
             traceEventSession.EnableProvider(
                 ClrTraceEventParser.ProviderGuid,
                 TraceEventLevel.Verbose, // Verbose needed for call stacks.
@@ -50,12 +52,13 @@ namespace realmon.CallStackResolution
                 ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
                 ClrTraceEventParser.Keywords.JITSymbols                |
                 ClrTraceEventParser.Keywords.JitTracing                |
+                ClrTraceEventParser.Keywords.GCAllObjectAllocation     |
                 ClrTraceEventParser.Keywords.Jit                       |
                 ClrTraceEventParser.Keywords.Codesymbols               |
                 ClrTraceEventParser.Keywords.Interop                   |
                 ClrTraceEventParser.Keywords.NGen                      |
                 ClrTraceEventParser.Keywords.MethodDiagnostic          |
-                ClrTraceEventParser.Keywords.Stack));
+                ClrTraceEventParser.Keywords.Stack), options);
 
             // Needed for JIT Compile code that was already compiled. 
             traceEventSession.EnableProvider(ClrRundownTraceEventParser.ProviderGuid, TraceEventLevel.Verbose,
@@ -64,19 +67,20 @@ namespace realmon.CallStackResolution
                 ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
                 ClrTraceEventParser.Keywords.JITSymbols                |
                 ClrTraceEventParser.Keywords.Jit                       |
+                ClrTraceEventParser.Keywords.GCAllObjectAllocation     |
                 ClrTraceEventParser.Keywords.JitTracing                |
                 ClrTraceEventParser.Keywords.Codesymbols               |
                 ClrTraceEventParser.Keywords.Interop                   |
                 ClrTraceEventParser.Keywords.GC                        |
                 ClrTraceEventParser.Keywords.NGen                      |
                 ClrTraceEventParser.Keywords.MethodDiagnostic          |
-                ClrTraceEventParser.Keywords.StartEnumeration));
+                ClrTraceEventParser.Keywords.StartEnumeration), options);
 
             // Subscribe to the requested events.
             TraceLogEventSource traceLogEventSource = TraceLog.CreateFromTraceEventSession(traceEventSession);
             traceLogEventSource.TraceLog.Clr.GCTriggered += (GCTriggeredTraceData traceEvent) =>
             {
-                if (traceEvent.Reason == GCReason.Induced && processId == traceEvent.ProcessID)
+                if (traceEvent.Reason == GCReason.Induced)
                 {
                     PrintCallStack(traceEvent, configuration);
                 }
@@ -84,7 +88,7 @@ namespace realmon.CallStackResolution
 
             traceLogEventSource.TraceLog.Clr.GCAllocationTick += (GCAllocationTickTraceData traceEvent) =>
             {
-                if (traceEvent.AllocationKind == GCAllocationKind.Large && traceEvent.ProcessID == processId)
+                if (traceEvent.AllocationKind == GCAllocationKind.Large)
                 {
                     PrintCallStack(traceEvent, configuration);
                 }
