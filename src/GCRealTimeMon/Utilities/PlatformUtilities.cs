@@ -14,9 +14,7 @@ namespace realmon.Utilities
     {
         public static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        [DllImport("libc")]
-        public static extern uint getuid();
-        public static bool IsRoot()
+        public static bool IsAdminForWindows()
         {
             if (IsWindows)
             {
@@ -30,10 +28,10 @@ namespace realmon.Utilities
                 return isAdmin;
             }
             
-            // For Linux/MacOS, checking getuid() == 0 gives us sudo access.
+            // Since this method is only for Windows, return false in the case we are running this for MacOS/Linux. 
             else
             {
-                return getuid() == 0;
+                return false;
             }
         }
 

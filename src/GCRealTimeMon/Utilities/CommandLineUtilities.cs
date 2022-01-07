@@ -87,7 +87,7 @@ More Details:
                 }
                 if (cmdLine == null)
                 {
-                    var dummy = process.MainModule; // Provoke exception.
+                    var _ = process.MainModule; // Provoke exception.
                 }
 
                 return cmdLine;
@@ -107,23 +107,30 @@ More Details:
         /// <returns></returns>
         public static int GetProcessIdIfThereAreMultipleProcesses(Process[] processes)
         {
-            // We can only obtain the process args if we have sudo / admin privileges.
-            bool isRoot = PlatformUtilities.IsRoot();
+            // We can only obtain the command line args in Windows if we are in admin mode.
+            // For Linux/MacOS, we can read the process id via a file read at ``/proc/process.Id/cmdline``.
+            bool canCommandLineArgsBeObtained = PlatformUtilities.IsAdminForWindows() || !PlatformUtilities.IsWindows;
 
-            List<string> processDetails = new List<string>(processes.Length); 
+            List<string> processDetails = new List<string>(processes.Length);
             foreach(var process in processes)
             {
-                if (isRoot)
+                // It doesn't make sense to analyze _this_ process => we get rid of it from the list.
+                if (process.Id == Process.GetCurrentProcess().Id)
+                {
+                    continue;
+                }
+
+                if (canCommandLineArgsBeObtained)
                 {
                     processDetails.Add($"Pid: {process.Id} | Arguments: {process.GetCommandLineArguments()}"); 
                 }
                 else
                 {
-                    processDetails.Add($"Pid: {process.Id} ");
+                    processDetails.Add($"Pid: {process.Id}");
                 }
             }
 
-            string multiprocessPrompt = isRoot ?
+            string multiprocessPrompt = canCommandLineArgsBeObtained ?
                 $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below"
                 : $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below. \nNote: To view the command line arguments for the process, you have to be in admin/sudo mode.";
 

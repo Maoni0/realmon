@@ -281,7 +281,7 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                           }
 
                           // If multiple processes are found, prompt the user to select one by displaying the PID.
-                          if (processes.Length != 1)
+                          if (processes.Length > 1)
                           {
                               options.ProcessId = CommandLineUtilities.GetProcessIdIfThereAreMultipleProcesses(processes);
                           }
