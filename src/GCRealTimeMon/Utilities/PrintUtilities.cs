@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using GCRealTimeMon.Configuration;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using realmon.Configuration.Theme;
 
 namespace realmon.Utilities
 {
@@ -40,12 +40,12 @@ namespace realmon.Utilities
             List<string> headerColumns = new List<string>(configuration.Columns.Count + 1);
 
             // Add the `index` column.
-            headerColumns.Add(Theme.ToHeader("GC#"));
+            headerColumns.Add(ThemeConfig.ToHeader("GC#"));
 
             // Iterate through all columns in the config.
             foreach (var columnName in configuration.Columns)
             {
-                headerColumns.Add(Theme.ToHeader(columnName));
+                headerColumns.Add(ThemeConfig.ToHeader(columnName));
             }
 
             return headerColumns;
@@ -170,9 +170,9 @@ namespace realmon.Utilities
         {
             string color = traceEvent.Generation switch
             {
-                0 => Theme.Constants.Gen0RowColor,
-                1 => Theme.Constants.Gen1RowColor,
-                2 => Theme.Constants.Gen2RowColor,
+                0 => $"[{ThemeConfig.Current.Gen0RowColor}]",
+                1 => $"[{ThemeConfig.Current.Gen1RowColor}]",
+                2 => $"[{ThemeConfig.Current.Gen2RowColor}]",
                 _ => "[]"
             };
 

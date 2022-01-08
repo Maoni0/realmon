@@ -1,6 +1,6 @@
-﻿namespace GCRealTimeMon.Utilities
+﻿namespace realmon.Utilities
 {
-    using GCRealTimeMon.Configuration;
+    using realmon.Configuration.Theme;
     using Spectre.Console;
 
     /// <summary>
@@ -14,7 +14,7 @@
         /// <param name="ruleMessage">The message to put in the center of the rule line.</param>
         public static void WriteRule(string ruleMessage)
         {
-            AnsiConsole.Write(new Rule(ruleMessage).RuleStyle(Style.Parse(Theme.Constants.MessageRuleColor)));
+            AnsiConsole.Write(new Rule(ruleMessage).RuleStyle(Style.Parse(ThemeConfig.Current.MessageRuleColor)));
         }
 
         /// <summary>
@@ -22,7 +22,7 @@
         /// </summary>
         internal static void WriteRule()
         {
-            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(Theme.Constants.MessageRuleColor)));
+            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(ThemeConfig.Current.MessageRuleColor)));
         }
 
         /// <summary>
@@ -31,7 +31,7 @@
         /// <param name="warningMessage">The message to write.</param>
         internal static void WriteWarning(string warningMessage)
         {
-            AnsiConsole.MarkupLine(Theme.ToWarning(warningMessage));
+            AnsiConsole.MarkupLine(ThemeConfig.ToWarning(warningMessage));
         }
     }
 }

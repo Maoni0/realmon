@@ -1,4 +1,5 @@
-﻿using realmon.Utilities;
+﻿using realmon.Configuration.Theme;
+using realmon.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using Spectre.Console;
 
 namespace realmon.Configuration
 {
@@ -38,7 +40,7 @@ namespace realmon.Configuration
             string configContents = await File.ReadAllTextAsync(path);
             Configuration configuration = deserializer.Deserialize<Configuration>(configContents);
             ValidateConfiguration(configuration);
-            return await Task.FromResult(configuration);
+            return configuration;
         }
 
         /// <summary>
@@ -68,7 +70,7 @@ namespace realmon.Configuration
 
             // Check for valid column names for both available and columns to display.
             // Columns to Display.
-            foreach(var column in configuration.Columns)
+            foreach (var column in configuration.Columns)
             {
                 if (!ColumnInfoMap.Map.ContainsKey(column))
                 {
@@ -77,7 +79,7 @@ namespace realmon.Configuration
             }
 
             // All Available Columns.
-            foreach(var column in configuration.AvailableColumns)
+            foreach (var column in configuration.AvailableColumns)
             {
                 if (!ColumnInfoMap.Map.ContainsKey(column))
                 {
@@ -119,6 +121,22 @@ namespace realmon.Configuration
                     if (!double.TryParse(minDuration, out _))
                     {
                         throw new ArgumentException("The `min gc duration (msec)` value of the display_conditions has to be a double.");
+                    }
+                }
+            }
+
+            // Check for custom theme
+            if (configuration.Theme != null)
+            {
+                foreach (PropertyInfo prop in typeof(ITheme).GetProperties())
+                {
+                    string value = (string)prop.GetValue(configuration.Theme);
+
+                    // null is allowed; we'll fall back to default theme for those fields
+                    // if there is a non-null value specified, make sure it parses as a style
+                    if (value != null && !Style.TryParse(value, out Style result))
+                    {
+                        throw new ArgumentException($"The value '{value}' for theme field '{prop.Name}' is invalid.");
                     }
                 }
             }

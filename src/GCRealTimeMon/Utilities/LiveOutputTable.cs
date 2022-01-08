@@ -1,4 +1,4 @@
-﻿namespace GCRealTimeMon.Utilities
+﻿namespace realmon.Utilities
 {
     using System;
     using System.Collections.Generic;
@@ -7,7 +7,6 @@
     using System.Threading.Channels;
     using System.Threading.Tasks;
     using Microsoft.Diagnostics.Tracing.Analysis.GC;
-    using realmon.Utilities;
     using Spectre.Console;
     using Configuration = realmon.Configuration.Configuration;
 
@@ -90,10 +89,11 @@
         /// </summary>
         /// <param name="gc">The trace GC data to write.</param>
         /// <returns>A task indicating completion.</returns>
-        public async Task WriteRowAsync(TraceGC gc)
+        public void WriteRow(TraceGC gc)
         {
             List<string> rowDetails = PrintUtilities.GetRowDetailsList(gc, this.configuration);
-            await channel.Writer.WriteAsync(rowDetails);
+            bool wasWritten = channel.Writer.TryWrite(rowDetails);
+            System.Diagnostics.Debug.Assert(wasWritten, "Expected the write to the channel to be successful since it is unbounded.");
         }
 
         private void ResetCancellation()

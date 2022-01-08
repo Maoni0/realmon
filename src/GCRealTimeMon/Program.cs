@@ -5,11 +5,10 @@ using System.IO;
 using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
-using GCRealTimeMon.Configuration;
-using GCRealTimeMon.Utilities;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using realmon.Configuration;
+using realmon.Configuration.Theme;
 using realmon.Utilities;
 using Spectre.Console;
 
@@ -65,7 +64,7 @@ namespace realmon
                 minDurationForGCPausesInMSec = double.Parse(minDuration);
             }
 
-            ConsoleOut.WriteRule($"[{Theme.Constants.MessageColor}]Monitoring process with name: [{Theme.Constants.HighlightColor}]{process.ProcessName}[/] and pid: [{Theme.Constants.HighlightColor}]{pid}[/][/]");
+            ConsoleOut.WriteRule($"[{ThemeConfig.Current.MessageColor}]Monitoring process with name: [{ThemeConfig.Current.HighlightColor}]{process.ProcessName}[/] and pid: [{ThemeConfig.Current.HighlightColor}]{pid}[/][/]");
 
             liveOutputTable = new LiveOutputTable(configuration);
             liveOutputTable.Start();
@@ -98,7 +97,7 @@ namespace realmon
                                 lastGCTime = DateTime.UtcNow;
                                 lastGC = gc;
 
-                                _ = liveOutputTable.WriteRowAsync(gc);
+                                liveOutputTable.WriteRow(gc);
                             }
                         }
                     };
@@ -162,15 +161,15 @@ namespace realmon
                 ConsoleOut.WriteRule();
 
                 Table table = new Table().HideHeaders();
-                table.Title = new TableTitle(string.Format("Heap Stats as of {0:u} (Run {1} for gen {2}):\n", lastGCTime, t.Number, t.Generation));
+                table.Title = new TableTitle($"[{ThemeConfig.Current.GCTableHeaderColor}]Heap Stats as of {lastGCTime:u} (Run {t.Number} for gen {t.Generation}):[/]\n");
                 table.AddColumn(new TableColumn("Results")); // name is hidden
                 table.AddRow(
                     new Table().HideHeaders()
                     .AddColumn("Name", config => config.Alignment(Justify.Left)) // name is hidden
                     .AddColumn("Value", config => config.Alignment(Justify.Right)) // name is hidden
-                    .AddRow(Theme.ToHeader("Heaps:"), string.Format("{0:N0}", t.HeapCount))
-                    .AddRow(Theme.ToHeader("Handles:"), string.Format("{0:N0}", s.GCHandleCount))
-                    .AddRow(Theme.ToHeader("Pinned Obj Count:"), string.Format("{0:N0}", s.PinnedObjectCount)));
+                    .AddRow(ThemeConfig.ToHeader("Heaps:"), string.Format("{0:N0}", t.HeapCount))
+                    .AddRow(ThemeConfig.ToHeader("Handles:"), string.Format("{0:N0}", s.GCHandleCount))
+                    .AddRow(ThemeConfig.ToHeader("Pinned Obj Count:"), string.Format("{0:N0}", s.PinnedObjectCount)));
 
                 table.AddRow(
                      new Panel(
@@ -179,25 +178,23 @@ namespace realmon
                          .AddRow(new Table().HideHeaders()
                             .AddColumn("Name", config => config.Alignment(Justify.Left)) // name is hidden
                             .AddColumn("Value", config => config.Alignment(Justify.Right)) // name is hidden
-                            .AddRow(Theme.TotalHeap, string.Format("{0,17:N0} Bytes", s.TotalHeapSize))
-                            .AddRow(Theme.Gen0Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize0))
-                            .AddRow(Theme.Gen1Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize1))
-                            .AddRow(Theme.Gen2Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize2))
-                            .AddRow(Theme.Gen3Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize3))
-                            .AddRow(Theme.Gen4Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize4)))
+                            .AddRow(ThemeConfig.TotalHeap, string.Format("{0,17:N0} Bytes", s.TotalHeapSize))
+                            .AddRow(ThemeConfig.Gen0Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize0))
+                            .AddRow(ThemeConfig.Gen1Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize1))
+                            .AddRow(ThemeConfig.Gen2Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize2))
+                            .AddRow(ThemeConfig.Gen3Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize3))
+                            .AddRow(ThemeConfig.Gen4Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize4)))
                          .AddRow(new BreakdownChart()
                             .FullSize()
                             .Width(60)
                             .ShowPercentage()
-                             // Future - if we want these to be configurable via yaml, we may need to look into adding Color.Parse(string) to Spectre.Console Color class so we can turn
-                             // config in Themes.cs into Color objects here.
-                             .AddItem("Gen 0", Math.Round(100 * (s.GenerationSize0 / (double)s.TotalHeapSize), 2), Color.Green1)
-                             .AddItem("Gen 1", Math.Round(100 * (s.GenerationSize1 / (double)s.TotalHeapSize), 2), Color.HotPink)
-                             .AddItem("Gen 2", Math.Round(100 * (s.GenerationSize2 / (double)s.TotalHeapSize), 2), Color.DodgerBlue1)
-                             .AddItem("Gen 3", Math.Round(100 * (s.GenerationSize3 / (double)s.TotalHeapSize), 2), Color.Yellow1)
-                             .AddItem("Gen 4", Math.Round(100 * (s.GenerationSize4 / (double)s.TotalHeapSize), 2), Color.MediumPurple3))
+                             .AddItem("Gen 0", Math.Round(100 * (s.GenerationSize0 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen0HeapColor).Foreground)
+                             .AddItem("Gen 1", Math.Round(100 * (s.GenerationSize1 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen1HeapColor).Foreground)
+                             .AddItem("Gen 2", Math.Round(100 * (s.GenerationSize2 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen2HeapColor).Foreground)
+                             .AddItem("Gen 3", Math.Round(100 * (s.GenerationSize3 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen3HeapColor).Foreground)
+                             .AddItem("Gen 4", Math.Round(100 * (s.GenerationSize4 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen4HeapColor).Foreground))
                       )
-                     .Header(Theme.ToMessage("Last Run Stats:")));
+                     .Header(ThemeConfig.ToMessage("Last Run Stats:")));
 
                 AnsiConsole.Write(table);
                 ConsoleOut.WriteRule();
@@ -294,6 +291,7 @@ namespace realmon
                       }
 
                       var configuration = await GetConfiguration(options);
+                      ThemeConfig.Initialize(configuration);
 
                       if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                       {
@@ -325,7 +323,7 @@ namespace realmon
                           options.ProcessId = processes[0].Id;
                       }
 
-                      ConsoleOut.WriteRule($"[{Theme.Constants.MessageColor}]press [{Theme.Constants.HighlightColor}]s[/] for current stats or any other key to exit[/]");
+                      ConsoleOut.WriteRule($"[{ThemeConfig.Current.MessageColor}]press [{ThemeConfig.Current.HighlightColor}]s[/] for current stats or any other key to exit[/]");
 
                       SetupHeapStatsTimerIfEnabled(configuration);
                       RealTimeProcessing(options.ProcessId, options, configuration);
