@@ -119,5 +119,10 @@
 
             liveOutputTable.Start();
         }
+
+        public void WriteStatsUsage()
+        {
+            WriteRule($"[{ThemeConfig.Current.MessageColor}]press [{ThemeConfig.Current.HighlightColor}]s[/] for current stats or any other key to exit[/]");
+        }
     }
 }

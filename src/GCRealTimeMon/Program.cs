@@ -234,10 +234,7 @@ namespace realmon
                       }
 
                       var configuration = await GetConfiguration(options);
-                      ThemeConfig.Initialize(configuration);
-
-                      // TODO - factory method to choose based on config or redirect
-                      IConsoleOut consoleOut = new SpectreConsoleOut(configuration);
+                      IConsoleOut consoleOut = ConsoleOutFactory.Create(configuration);
 
                       if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                       {
@@ -269,7 +266,7 @@ namespace realmon
                           options.ProcessId = processes[0].Id;
                       }
 
-                      consoleOut.WriteRule($"[{ThemeConfig.Current.MessageColor}]press [{ThemeConfig.Current.HighlightColor}]s[/] for current stats or any other key to exit[/]");
+                      consoleOut.WriteStatsUsage();
 
                       SetupHeapStatsTimerIfEnabled(configuration, consoleOut);
                       RealTimeProcessing(options.ProcessId, options, configuration, consoleOut);

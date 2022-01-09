@@ -23,6 +23,11 @@
         private string totalHeapColor;
         private string warningColor;
 
+        /// <summary>
+        /// Set to true to disable color output
+        /// </summary>
+        public bool UsePlainText { get; set; } = false;
+
         [YamlMember(Alias = "gc_table_header_color")]
         public string GCTableHeaderColor
         {
