@@ -49,11 +49,9 @@ namespace realmon
             public bool HelpAsked { get; set; } = false;
         }
 
-        static DateTime lastGCTime;
-        static TraceGC lastGC;
-        static LiveOutputTable liveOutputTable;
+        static CapturedGCEvent lastGC;
 
-        public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration)
+        public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration, IConsoleOut consoleOut)
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
@@ -64,10 +62,8 @@ namespace realmon
                 minDurationForGCPausesInMSec = double.Parse(minDuration);
             }
 
-            ConsoleOut.WriteRule($"[{ThemeConfig.Current.MessageColor}]Monitoring process with name: [{ThemeConfig.Current.HighlightColor}]{process.ProcessName}[/] and pid: [{ThemeConfig.Current.HighlightColor}]{pid}[/][/]");
-
-            liveOutputTable = new LiveOutputTable(configuration);
-            liveOutputTable.Start();
+            consoleOut.WriteProcessInfo(process.ProcessName, pid);
+            consoleOut.WriteTableHeaders();
 
             var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out var session);
             Console.CancelKeyPress += (_, e) =>
@@ -79,7 +75,7 @@ namespace realmon
             };
 
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
-            Task.Run(async () => await HandleConsoleInputAsync(session));
+            Task.Run(async () => await HandleConsoleInputAsync(session, consoleOut));
 
             source.NeedLoadedDotNetRuntimes();
             source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
@@ -94,10 +90,15 @@ namespace realmon
                             if (!minDurationForGCPausesInMSec.HasValue ||
                                 (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                             {
-                                lastGCTime = DateTime.UtcNow;
-                                lastGC = gc;
+                                CapturedGCEvent currentGCEvent = new CapturedGCEvent
+                                {
+                                    Time = DateTime.UtcNow,
+                                    Data = gc
+                                };
 
-                                liveOutputTable.WriteRow(gc);
+                                lastGC = currentGCEvent;
+
+                                consoleOut.WriteRow(gc);
                             }
                         }
                     };
@@ -108,7 +109,7 @@ namespace realmon
             source.Process();
         }
 
-        private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration)
+        private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration, IConsoleOut consoleOut)
         {
             if (configuration.StatsMode == null)
             {
@@ -137,7 +138,7 @@ namespace realmon
                 {
                     if (lastGC != null)
                     {
-                        await PrintLastStatsAsync();
+                        await consoleOut.PrintLastStatsAsync(lastGC);
                     }
 
                     await Task.Delay(period);
@@ -145,71 +146,13 @@ namespace realmon
             });
         }
 
-        private static async Task PrintLastStatsAsync()
-        {
-            await liveOutputTable.StopAsync();
-
-            if (lastGC == null)
-            {
-                ConsoleOut.WriteWarning("No stats collected yet.");
-            }
-            else
-            {
-                var t = lastGC; // capture, since this could tear
-                var s = t.HeapStats;
-
-                ConsoleOut.WriteRule();
-
-                Table table = new Table().HideHeaders();
-                table.Title = new TableTitle($"[{ThemeConfig.Current.GCTableHeaderColor}]Heap Stats as of {lastGCTime:u} (Run {t.Number} for gen {t.Generation}):[/]\n");
-                table.AddColumn(new TableColumn("Results")); // name is hidden
-                table.AddRow(
-                    new Table().HideHeaders()
-                    .AddColumn("Name", config => config.Alignment(Justify.Left)) // name is hidden
-                    .AddColumn("Value", config => config.Alignment(Justify.Right)) // name is hidden
-                    .AddRow(ThemeConfig.ToHeader("Heaps:"), string.Format("{0:N0}", t.HeapCount))
-                    .AddRow(ThemeConfig.ToHeader("Handles:"), string.Format("{0:N0}", s.GCHandleCount))
-                    .AddRow(ThemeConfig.ToHeader("Pinned Obj Count:"), string.Format("{0:N0}", s.PinnedObjectCount)));
-
-                table.AddRow(
-                     new Panel(
-                         new Table().HideHeaders().NoBorder() // lets us render two "rows" for stats table and then breakdown chart
-                         .AddColumn("Col1") // name is hidden
-                         .AddRow(new Table().HideHeaders()
-                            .AddColumn("Name", config => config.Alignment(Justify.Left)) // name is hidden
-                            .AddColumn("Value", config => config.Alignment(Justify.Right)) // name is hidden
-                            .AddRow(ThemeConfig.TotalHeap, string.Format("{0,17:N0} Bytes", s.TotalHeapSize))
-                            .AddRow(ThemeConfig.Gen0Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize0))
-                            .AddRow(ThemeConfig.Gen1Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize1))
-                            .AddRow(ThemeConfig.Gen2Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize2))
-                            .AddRow(ThemeConfig.Gen3Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize3))
-                            .AddRow(ThemeConfig.Gen4Heap, string.Format("{0,17:N0} Bytes", s.GenerationSize4)))
-                         .AddRow(new BreakdownChart()
-                            .FullSize()
-                            .Width(60)
-                            .ShowPercentage()
-                             .AddItem("Gen 0", Math.Round(100 * (s.GenerationSize0 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen0HeapColor).Foreground)
-                             .AddItem("Gen 1", Math.Round(100 * (s.GenerationSize1 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen1HeapColor).Foreground)
-                             .AddItem("Gen 2", Math.Round(100 * (s.GenerationSize2 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen2HeapColor).Foreground)
-                             .AddItem("Gen 3", Math.Round(100 * (s.GenerationSize3 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen3HeapColor).Foreground)
-                             .AddItem("Gen 4", Math.Round(100 * (s.GenerationSize4 / (double)s.TotalHeapSize), 2), Style.Parse(ThemeConfig.Current.Gen4HeapColor).Foreground))
-                      )
-                     .Header(ThemeConfig.ToMessage("Last Run Stats:")));
-
-                AnsiConsole.Write(table);
-                ConsoleOut.WriteRule();
-            }
-
-            liveOutputTable.Restart();
-        }
-
-        static async Task HandleConsoleInputAsync(IDisposable session)
+        static async Task HandleConsoleInputAsync(IDisposable session, IConsoleOut consoleOut)
         {
             var k = Console.ReadKey(true);
 
             while (k.Key == ConsoleKey.S)
             {
-                await PrintLastStatsAsync();
+                await consoleOut.PrintLastStatsAsync(lastGC);
                 k = Console.ReadKey(true);
             }
             session.Dispose();
@@ -293,12 +236,15 @@ namespace realmon
                       var configuration = await GetConfiguration(options);
                       ThemeConfig.Initialize(configuration);
 
+                      // TODO - factory method to choose based on config or redirect
+                      IConsoleOut consoleOut = new SpectreConsoleOut(configuration);
+
                       if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                       {
                           // If no process details are provided _but_ if the user provides -c without args or -g <path>, don't display help.
                           if (!string.IsNullOrWhiteSpace(options.PathToNewConfigurationFile) || // User passed: -g <path> 
-                              string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0 // User passed -c without a path.
-                             )
+                          string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0 // User passed -c without a path.
+                         )
                           {
                               return;
                           }
@@ -323,10 +269,10 @@ namespace realmon
                           options.ProcessId = processes[0].Id;
                       }
 
-                      ConsoleOut.WriteRule($"[{ThemeConfig.Current.MessageColor}]press [{ThemeConfig.Current.HighlightColor}]s[/] for current stats or any other key to exit[/]");
+                      consoleOut.WriteRule($"[{ThemeConfig.Current.MessageColor}]press [{ThemeConfig.Current.HighlightColor}]s[/] for current stats or any other key to exit[/]");
 
-                      SetupHeapStatsTimerIfEnabled(configuration);
-                      RealTimeProcessing(options.ProcessId, options, configuration);
+                      SetupHeapStatsTimerIfEnabled(configuration, consoleOut);
+                      RealTimeProcessing(options.ProcessId, options, configuration, consoleOut);
                   },
                   errors => Task.FromResult(errors)
                   );

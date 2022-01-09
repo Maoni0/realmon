@@ -37,12 +37,15 @@
     <Compile Include="..\GCRealTimeMon\Configuration\Theme\LightTheme.cs" Link="Configuration\Theme\LightTheme.cs" />
     <Compile Include="..\GCRealTimeMon\Configuration\Theme\ThemeConfig.cs" Link="Configuration\Theme\ThemeConfig.cs" />
     <Compile Include="..\GCRealTimeMon\Program.cs" Link="Program.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\CapturedGCEvent.cs" Link="Utilities\CapturedGCEvent.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\ColumnInfo.cs" Link="Utilities\ColumnInfo.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\ColumnInfoMap.cs" Link="Utilities\ColumnInfoMap.cs" />
-    <Compile Include="..\GCRealTimeMon\Utilities\ConsoleOut.cs" Link="ConsoleOut.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\IConsoleOut.cs" Link="IConsoleOut.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\LiveOutputTable.cs" Link="LiveOutputTable.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\PlainConsoleOut.cs" Link="PlainConsoleOut.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\PlatformUtilities.cs" Link="Utilities\PlatformUtilities.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\PrintUtilities.cs" Link="Utilities\PrintUtilities.cs" />
+    <Compile Include="..\GCRealTimeMon\Utilities\SpectreConsoleOut.cs" Link="SpectreConsoleOut.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\CommandLineUtilities.cs" Link="Utilities\CommandLineUtilities.cs" />
   </ItemGroup>
 

@@ -21,16 +21,17 @@
         private readonly Configuration configuration;
 
         // A task used to track the currently running Spectre.Console live table thread
+        // If this is null, there is no live table started.
         private Task runningLiveTableTask;
 
         // Used to signal to the Spectre.Console thread that it should stop writing to the console (so we can write something else, like stats.)
         private CancellationTokenSource cts;
+
         private bool disposed;
 
         public LiveOutputTable(Configuration configuration)
         {
             channel = Channel.CreateUnbounded<IList<string>>();
-            this.ResetCancellation();
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
@@ -39,9 +40,15 @@
         /// </summary>
         public void Start()
         {
+            if (runningLiveTableTask != null)
+            {
+                throw new InvalidOperationException($"{nameof(LiveOutputTable)} Already started.");
+            }
+
             Table table = new Table();
             AddHeaders(table);
 
+            this.ResetCancellation();
             CancellationToken ct = cts.Token;
 
             // Start the live updates and keep a reference to the returned Task
@@ -73,16 +80,14 @@
             catch (OperationCanceledException)
             {
             }
+            finally
+            {
+                this.cts?.Dispose();
+                this.cts = null;
+                runningLiveTableTask = null;
+            }
         }
 
-        /// <summary>
-        /// Restarts a live table that was previously stopped.
-        /// </summary>
-        public void Restart()
-        {
-            this.ResetCancellation();
-            Start();
-        }
 
         /// <summary>
         /// Writes a new row to the table based on the input TraceGC data & the current configuration.
@@ -117,7 +122,7 @@
             {
                 if (disposing)
                 {
-                    this.cts.Dispose();
+                    this.cts?.Dispose();
                 }
 
                 disposed = true;
