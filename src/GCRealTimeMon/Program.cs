@@ -8,9 +8,7 @@ using CommandLine.Text;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using realmon.Configuration;
-using realmon.Configuration.Theme;
 using realmon.Utilities;
-using Spectre.Console;
 
 namespace realmon
 {

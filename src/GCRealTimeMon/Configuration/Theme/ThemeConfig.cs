@@ -1,7 +1,7 @@
-﻿namespace realmon.Configuration.Theme
-{
-    using System;
+﻿using System;
 
+namespace realmon.Configuration.Theme
+{
     /// <summary>
     /// Constants used for spectre console output theming.
     /// </summary>

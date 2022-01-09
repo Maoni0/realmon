@@ -1,6 +1,7 @@
-﻿namespace realmon.Configuration.Theme
+﻿using YamlDotNet.Serialization;
+
+namespace realmon.Configuration.Theme
 {
-    using YamlDotNet.Serialization;
     /// <summary>
     /// A custom user-defined theme. If a particular property is not set, it falls back to the default.
     /// </summary>

@@ -1,8 +1,9 @@
-﻿namespace realmon.Utilities
+﻿using System;
+using realmon.Configuration.Theme;
+
+namespace realmon.Utilities
 {
-    using System;
-    using realmon.Configuration;
-    using realmon.Configuration.Theme;
+    using Configuration = realmon.Configuration.Configuration;
 
     internal static class ConsoleOutFactory
     {

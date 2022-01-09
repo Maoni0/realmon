@@ -1,9 +1,10 @@
-﻿namespace realmon.Utilities
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.Diagnostics.Tracing.Analysis.GC;
+
+namespace realmon.Utilities
 {
-    using System;
-    using System.Threading.Tasks;
-    using Microsoft.Diagnostics.Tracing.Analysis.GC;
-    using realmon.Configuration;
+    using Configuration = realmon.Configuration.Configuration;
 
     /// <summary>
     /// Utility for writing plain text console output

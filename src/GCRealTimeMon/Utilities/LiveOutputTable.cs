@@ -1,13 +1,14 @@
-﻿namespace realmon.Utilities
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
+using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using Spectre.Console;
+
+namespace realmon.Utilities
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Channels;
-    using System.Threading.Tasks;
-    using Microsoft.Diagnostics.Tracing.Analysis.GC;
-    using Spectre.Console;
     using Configuration = realmon.Configuration.Configuration;
 
     /// <summary>

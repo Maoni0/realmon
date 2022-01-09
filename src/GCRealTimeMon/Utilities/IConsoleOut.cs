@@ -1,8 +1,8 @@
-﻿namespace realmon.Utilities
-{
-    using System.Threading.Tasks;
-    using Microsoft.Diagnostics.Tracing.Analysis.GC;
+﻿using System.Threading.Tasks;
+using Microsoft.Diagnostics.Tracing.Analysis.GC;
 
+namespace realmon.Utilities
+{
     /// <summary>
     /// An interface covering the console output needs of the program.
     /// </summary>
