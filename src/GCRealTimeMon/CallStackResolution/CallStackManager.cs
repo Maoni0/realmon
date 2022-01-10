@@ -52,7 +52,6 @@ namespace realmon.CallStackResolution
                 ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
                 ClrTraceEventParser.Keywords.JITSymbols                |
                 ClrTraceEventParser.Keywords.JitTracing                |
-                ClrTraceEventParser.Keywords.GCAllObjectAllocation     |
                 ClrTraceEventParser.Keywords.Jit                       |
                 ClrTraceEventParser.Keywords.Codesymbols               |
                 ClrTraceEventParser.Keywords.Interop                   |
@@ -67,7 +66,6 @@ namespace realmon.CallStackResolution
                 ClrTraceEventParser.Keywords.JittedMethodILToNativeMap |
                 ClrTraceEventParser.Keywords.JITSymbols                |
                 ClrTraceEventParser.Keywords.Jit                       |
-                ClrTraceEventParser.Keywords.GCAllObjectAllocation     |
                 ClrTraceEventParser.Keywords.JitTracing                |
                 ClrTraceEventParser.Keywords.Codesymbols               |
                 ClrTraceEventParser.Keywords.Interop                   |
