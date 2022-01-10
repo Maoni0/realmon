@@ -78,8 +78,11 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             };
 
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
-            Thread monitorThread = new Thread(() => HandleConsoleInput(session)) ;
-            monitorThread.Start();
+            Thread monitorThread = new Thread(() => HandleConsoleInput(session));
+            if (!Console.IsInputRedirected)
+            {
+                monitorThread.Start();
+            }
 
             source.NeedLoadedDotNetRuntimes();
             source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
@@ -295,7 +298,10 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                           options.ProcessId = processes[0].Id;
                       }
 
-                      Console.WriteLine("------- press s for current stats or any other key to exit -------");
+                      if (!Console.IsInputRedirected)
+                      {
+                          Console.WriteLine("------- press s for current stats or any other key to exit -------");
+                      }
 
                       SetupHeapStatsTimerIfEnabled(configuration);
                       RealTimeProcessing(options.ProcessId, options, configuration);
