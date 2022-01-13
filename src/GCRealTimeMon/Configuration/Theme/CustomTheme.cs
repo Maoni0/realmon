@@ -5,7 +5,7 @@ namespace realmon.Configuration.Theme
     /// <summary>
     /// A custom user-defined theme. If a particular property is not set, it falls back to the default.
     /// </summary>
-    /// <remarks>Some of the members are specially annoated with <see cref="YamlMemberAttribute"/> because their default naming
+    /// <remarks>Some of the members are specially annotated with <see cref="YamlMemberAttribute"/> because their default naming
     /// convention would be more onerous.</remarks>
     public class CustomTheme : ITheme
     {
