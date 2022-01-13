@@ -72,8 +72,11 @@ namespace realmon
                 Environment.Exit(0);
             };
 
+            if (!Console.IsInputRedirected)
+            {
             // this thread is responsible for listening to user input on the console and dispose the session accordingly
-            Task.Run(async () => await HandleConsoleInputAsync(session, consoleOut));
+                Task.Run(async () => await HandleConsoleInputAsync(session, consoleOut));
+            }
 
             source.NeedLoadedDotNetRuntimes();
             source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
@@ -264,7 +267,10 @@ namespace realmon
                           options.ProcessId = processes[0].Id;
                       }
 
-                      consoleOut.WriteStatsUsage();
+                    if (!Console.IsInputRedirected)
+                      {
+                        consoleOut.WriteStatsUsage();
+                      }
 
                       SetupHeapStatsTimerIfEnabled(configuration, consoleOut);
                       RealTimeProcessing(options.ProcessId, options, configuration, consoleOut);
