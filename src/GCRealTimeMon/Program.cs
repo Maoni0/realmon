@@ -74,7 +74,7 @@ namespace realmon
 
             if (!Console.IsInputRedirected)
             {
-            // this thread is responsible for listening to user input on the console and dispose the session accordingly
+                // this thread is responsible for listening to user input on the console and dispose the session accordingly
                 Task.Run(async () => await HandleConsoleInputAsync(session, consoleOut));
             }
 
@@ -267,9 +267,9 @@ namespace realmon
                           options.ProcessId = processes[0].Id;
                       }
 
-                    if (!Console.IsInputRedirected)
+                      if (!Console.IsInputRedirected)
                       {
-                        consoleOut.WriteStatsUsage();
+                          consoleOut.WriteStatsUsage();
                       }
 
                       SetupHeapStatsTimerIfEnabled(configuration, consoleOut);
