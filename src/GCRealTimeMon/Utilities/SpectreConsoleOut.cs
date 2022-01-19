@@ -39,7 +39,7 @@
         /// <param name="ruleMessage">The message to put in the center of the rule line.</param>
         public void WriteRule(string ruleMessage)
         {
-            AnsiConsole.Write(new Rule(ruleMessage).RuleStyle(Style.Parse(ThemeConfig.Current.MessageRuleColor)));
+            AnsiConsole.Write(new Rule(ruleMessage).RuleStyle(Style.Parse(ThemeConfig.Current.MessageColor)));
         }
 
         /// <summary>
@@ -47,7 +47,7 @@
         /// </summary>
         public void WriteRule()
         {
-            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(ThemeConfig.Current.MessageRuleColor)));
+            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(ThemeConfig.Current.MessageColor)));
         }
 
         /// <summary>

@@ -17,7 +17,6 @@
         string Gen4HeapColor { get; }
         string HighlightColor { get; }
         string MessageColor { get; }
-        string MessageRuleColor { get; }
         string TotalHeapColor { get; }
         string WarningColor { get; }
     }

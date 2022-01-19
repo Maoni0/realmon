@@ -20,7 +20,6 @@ namespace realmon.Configuration.Theme
         private string gen4HeapColor;
         private string highlightColor;
         private string messageColor;
-        private string messageRuleColor;
         private string totalHeapColor;
         private string warningColor;
 
@@ -102,12 +101,6 @@ namespace realmon.Configuration.Theme
         {
             get => messageColor ?? ThemeConfig.Default.MessageColor;
             set => messageColor = value;
-        }
-
-        public string MessageRuleColor
-        {
-            get => messageRuleColor ?? ThemeConfig.Default.MessageRuleColor;
-            set => messageRuleColor = value;
         }
 
         public string TotalHeapColor

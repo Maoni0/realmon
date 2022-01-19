@@ -7,8 +7,6 @@
     {
         public string MessageColor { get; } = "#718c00";
 
-        public string MessageRuleColor { get; } = "#718c00";
-
         public string WarningColor { get; } = "i #c82829";
 
         public string HighlightColor { get; } = "#8a6000";

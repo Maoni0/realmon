@@ -6,7 +6,6 @@
     internal class DarkTheme : ITheme
     {
         public string MessageColor { get; } = "bold blue";
-        public string MessageRuleColor { get; } = "green1";
 
         public string WarningColor { get; } = "i darkorange";
 
