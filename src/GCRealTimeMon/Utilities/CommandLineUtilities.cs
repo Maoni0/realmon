@@ -1,9 +1,11 @@
 ﻿using Sharprompt;
+using Spectre.Console;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace realmon.Utilities
 {
@@ -105,16 +107,21 @@ More Details:
         /// </summary>
         /// <param name="processes"></param>
         /// <returns></returns>
-        public static int GetProcessIdIfThereAreMultipleProcesses(Process[] processes)
+        internal static int GetProcessIdIfThereAreMultipleProcesses(Process[] processes, IConsoleOut consoleOut) 
         {
             // We can only obtain the command line args in Windows if we are in admin mode.
             // For Linux/MacOS, we can read the process id via a file read at ``/proc/process.Id/cmdline``.
             bool canCommandLineArgsBeObtained = PlatformUtilities.IsAdminForWindows() || !PlatformUtilities.IsWindows;
 
+            string multiprocessPrompt = canCommandLineArgsBeObtained ?
+                $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below"
+                : $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below. \nNote: To view the command line arguments for the process, you have to be in admin/sudo mode.";
+
             List<string> processDetails = new List<string>(processes.Length);
+
             foreach(var process in processes)
             {
-                // It doesn't make sense to analyze _this_ process => we get rid of it from the list.
+                // It doesn't make sense to analyze _this_ process if `realmon` is requested => we get rid of it from the list.
                 if (process.Id == Process.GetCurrentProcess().Id)
                 {
                     continue;
@@ -130,13 +137,7 @@ More Details:
                 }
             }
 
-            string multiprocessPrompt = canCommandLineArgsBeObtained ?
-                $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below"
-                : $"Several processes with name: '{processes[0].ProcessName}' have been found. Please choose one from the following from below. \nNote: To view the command line arguments for the process, you have to be in admin/sudo mode.";
-
-            string selectedProcess = Prompt.Select(multiprocessPrompt, processDetails);
-            string pidAsString = selectedProcess.Split('|')[0].Split(':')[1].Trim();
-            return int.Parse(pidAsString);
+            return consoleOut.WritePromptForMultipleProcessesAndReturnChosenProcessId(multiprocessPrompt, processDetails); 
         }
     }
 }

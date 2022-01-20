@@ -51,8 +51,12 @@ namespace realmon.Configuration
             // Since SharpPrompt doesn't allow us to configuration the answer as the forms are internal,
             // the workaround here is to set the answer to the background color of the console so that it appears invisible 
             // and then manually output it.
+            string messageForColumns =
+                defaultConfiguration == null ?
+                "Which columns would you like to select?" :
+                "Which columns would you like to select? Note: for pre-selected columns, hold space to de-select.";
             Prompt.ColorSchema.Answer = Console.BackgroundColor;
-            var chosenColumns = Prompt.MultiSelect(message: "Which columns would you like to select?",
+            var chosenColumns = Prompt.MultiSelect(message: messageForColumns,
                                                    items: allColumns,
                                                    defaultValues: defaultValuesForColumns);
             var nameOfColumns = chosenColumns.Select(s => s.Split(":").First().Trim());

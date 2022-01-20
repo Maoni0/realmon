@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
+    <RootNamespace>realmon</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +14,7 @@
     <PackageReference Include="Sharprompt" Version="2.3.7" />
     <PackageReference Include="System.Management" Version="6.0.0" />
     <PackageReference Include="YamlDotNet" Version="11.2.1" />
+    <PackageReference Include="Spectre.Console" Version="0.43.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +33,10 @@
     <Compile Update="Configuration\NewConfigurationManager.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="GCRealTimeMon" />
   </ItemGroup>
 
 </Project>

@@ -123,6 +123,29 @@ The process to add a new column from the ``TraceGC`` event is the following:
 3. Optionally add corresponding unit tests.
 4. Update the documentation here with the new column.
 
+## Theming
+By default, output is colored and formatted using [Spectre.Console](https://spectreconsole.net/). If stdout is being redirected, then plain text formatting is used instead. A dark theme is used by default unless the console background color is detected as white, then a light theme is used. You
+can configure all colors using the following fields in the `theme` yaml node:
+
+(All color values can be defined using [Spectre Color strings](https://spectreconsole.net/appendix/colors) or hex values.)
+
+| Name                  | Description                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| use_plain_text        | Set to true to force the output to be plain text. Default is false. Note that the [NO_COLOR initiative](https://no-color.org/) is also supported. |
+| gc_table_header_color | The color for the GC table headers.                                                                                                               |
+| gen0_row_color        | The color for row entries of Gen 0 events in the GC table.                                                                                        |
+| gen1_row_color        | The color for row entries of Gen 1 events in the GC table.                                                                                        |
+| gen2_row_color        | The color for row entries of Gen 2 events in the GC table.                                                                                        |
+| gen0_heap_color       | The color for gen0 stats in the heap stats table.                                                                                                 |
+| gen1_heap_color       | The color for gen1 stats in the heap stats table.                                                                                                 |
+| gen2_heap_color       | The color for gen2 stats in the heap stats table.                                                                                                 |
+| gen3_heap_color       | The color for gen3 (LOH) stats in the heap stats table.                                                                                           |
+| gen4_heap_color       | The color for gen4 (pinned object heap) stats in the heap stats table.                                                                            |
+| total_heap_color      | The color used to for information about total heap stats in the heap stats table.                                                                 |
+| highlight_color       | The color used to call out special information, like the process being monitored.                                                                 |
+| message_color         | The color used for standard messages written to output.                                                                                           |
+| warning_color         | The color used for warning messages written to output.                                                                                            |
+
 ## Unit Tests
 
 The unit tests are in the ``test`` directory and can be run by:

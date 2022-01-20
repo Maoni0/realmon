@@ -3,5 +3,7 @@
         <Assembly Name="System.Private.CoreLib">
             <Type Name="System.Collections.Generic.List`1[[System.String, System.Private.CoreLib]]" Dynamic="Required All" />
         </Assembly>
+        <Assembly Name="GCRealTimeMon" Dynamic="Required All">
+        </Assembly>
     </Application>
 </Directives>
