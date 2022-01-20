@@ -1,6 +1,5 @@
 ﻿using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing;
-using Microsoft.Diagnostics.Tracing.Etlx;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Session;
 using System;
@@ -12,8 +11,8 @@ namespace realmon.Utilities
 {
     internal static class PlatformUtilities
     {
-        public static TraceEventDispatcher GetTraceEventDispatcherBasedOnPlatform(Configuration.Configuration configuration,
-                                                                                  int processId, 
+        public static TraceEventDispatcher GetTraceEventDispatcherBasedOnPlatform(int processId, 
+                                                                                  IConsoleOut consoleOut,
                                                                                   bool enableCallStacks,
                                                                                   out IDisposable session)
         {
@@ -24,8 +23,8 @@ namespace realmon.Utilities
                 // If the user requested call stacks, enable them via the CallStackManager.
                 if (enableCallStacks)
                 {
-                    CallStackResolution.CallStackManager.InitializeAndRegisterCallStacks(configuration: configuration,
-                                                                                         traceEventSession: traceEventSession,
+                    CallStackResolution.CallStackManager.InitializeAndRegisterCallStacks(traceEventSession: traceEventSession,
+                                                                                         consoleOut: consoleOut,
                                                                                          processId: processId);
                 }
 

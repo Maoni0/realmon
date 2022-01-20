@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using Microsoft.Diagnostics.Tracing.Etlx;
 
 namespace realmon.Utilities
 {
@@ -12,6 +13,7 @@ namespace realmon.Utilities
         void WriteRow(TraceGC gc);
         void WriteTableHeaders();
         Task PrintLastStatsAsync(CapturedGCEvent lastGC);
+        Task PrintCallStack(TraceCallStack callstack, string eventName);
         void WriteStatsUsage();
     }
 }

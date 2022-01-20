@@ -3,6 +3,7 @@
     using System;
     using System.Threading.Tasks;
     using Microsoft.Diagnostics.Tracing.Analysis.GC;
+    using Microsoft.Diagnostics.Tracing.Etlx;
     using realmon.Configuration;
     using realmon.Configuration.Theme;
     using Spectre.Console;
@@ -57,11 +58,6 @@
         public void WriteWarning(string warningMessage)
         {
             AnsiConsole.MarkupLine(ThemeConfig.ToWarning(warningMessage));
-        }
-
-        public void PrintLastSatats(TraceGC traceGC, GCHeapStats heapStats)
-        {
-
         }
 
         public async Task PrintLastStatsAsync(CapturedGCEvent lastGC)
@@ -123,6 +119,36 @@
         public void WriteStatsUsage()
         {
             WriteRule($"[{ThemeConfig.Current.MessageColor}]press [{ThemeConfig.Current.HighlightColor}]s[/] for current stats or any other key to exit[/]");
+        }
+
+        public async Task PrintCallStack(TraceCallStack callstack, string eventName)
+        {
+            await liveOutputTable.StopAsync();
+
+            WriteRule();
+
+            Tree rootOfCallStack = new Tree($"[{ThemeConfig.Current.GCTableHeaderColor}]CallStack for: {eventName}:[/]");
+            while (callstack != null)
+            {
+                var codeAddress = callstack.CodeAddress;
+
+                // Like WinDbg, display unresolved modules with the address in Hex form.
+                if (codeAddress.ModuleFile == null)
+                {
+                    rootOfCallStack.AddNode($"[{ThemeConfig.Current.MessageColor}] 0x{codeAddress.Address.ToString("x").RemoveMarkup()}[/]");
+                }
+                else
+                {
+                    string resolvedFrame = $"[{ThemeConfig.Current.MessageColor}]{codeAddress.ModuleName}!{codeAddress.FullMethodName}[/]";
+                    rootOfCallStack.AddNode(resolvedFrame.RemoveMarkup());
+                }
+
+                callstack = callstack.Caller;
+            }
+            AnsiConsole.Write(rootOfCallStack);
+            WriteRule();
+
+            liveOutputTable.Start();
         }
     }
 }

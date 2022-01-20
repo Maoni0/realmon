@@ -5,8 +5,6 @@ using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using Microsoft.Diagnostics.Tracing.Session;
 using realmon.Utilities;
-using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace realmon.CallStackResolution
@@ -15,9 +13,9 @@ namespace realmon.CallStackResolution
     {
         private static SymbolReader m_symbolReader;
 
-        public static TraceLogEventSource InitializeAndRegisterCallStacks(Configuration.Configuration configuration, 
-                                                                          TraceEventSession traceEventSession, 
-                                                                          int processId)
+        internal static TraceLogEventSource InitializeAndRegisterCallStacks(TraceEventSession traceEventSession, 
+                                                                            IConsoleOut consoleOut,
+                                                                            int processId)
         {
             // TODO: Add configurations for the Symbol Reader Text Output path and the NT_SymbolPath.
             string symbolPath = SymbolPath.SymbolPathFromEnvironment;
@@ -80,7 +78,7 @@ namespace realmon.CallStackResolution
             {
                 if (traceEvent.Reason == GCReason.Induced)
                 {
-                    PrintCallStack(traceEvent, configuration);
+                    HandlePrintingCallStacks(traceEvent, consoleOut);
                 }
             };
 
@@ -88,24 +86,22 @@ namespace realmon.CallStackResolution
             {
                 if (traceEvent.AllocationKind == GCAllocationKind.Large)
                 {
-                    PrintCallStack(traceEvent, configuration);
+                    HandlePrintingCallStacks(traceEvent, consoleOut); 
                 }
             };
 
             return traceLogEventSource;
         }
 
-        internal static void PrintCallStack(TraceEvent data, Configuration.Configuration configuration)
+        internal static void HandlePrintingCallStacks(TraceEvent data, IConsoleOut consoleOut)
         {
-            Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
-            Console.WriteLine($"Callstack Type: {data.EventName}\n");
             var callStack = data.CallStack();
             if (callStack != null)
             {
                 ResolveSymbols(callStack);
-                PrintCallStack(callStack);
+                // consoleOut.PrintCallStack holds a write lock => don't resolve symbols, that can potentially be a long running task in the lock.
+                consoleOut.PrintCallStack(callStack, data.EventName);
             }
-            Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
         }
 
         internal static void ResolveSymbols(TraceCallStack callStack)
@@ -120,26 +116,6 @@ namespace realmon.CallStackResolution
                     {
                         codeAddress.CodeAddresses.LookupSymbolsForModule(m_symbolReader, moduleFile);
                     }
-                }
-
-                callStack = callStack.Caller;
-            }
-        }
-
-        internal static void PrintCallStack(TraceCallStack callStack)
-        {
-            while (callStack != null)
-            {
-                var codeAddress = callStack.CodeAddress;
-
-                // Like WinDbg, display unresolved modules with the address in Hex form.
-                if (codeAddress.ModuleFile == null)
-                {
-                    Console.WriteLine("0x{0:x}", codeAddress.Address);
-                }
-                else
-                {
-                    Console.WriteLine($"{codeAddress.ModuleName}!{codeAddress.FullMethodName}");
                 }
 
                 callStack = callStack.Caller;

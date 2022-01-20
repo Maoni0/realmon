@@ -69,8 +69,8 @@ namespace realmon
             consoleOut.WriteProcessInfo(process.ProcessName, pid);
             consoleOut.WriteTableHeaders();
 
-            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(configuration: configuration, 
-                                                                                  processId: pid, 
+            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(processId: pid, 
+                                                                                  consoleOut: consoleOut,
                                                                                   enableCallStacks: options.EnableCallStacks,
                                                                                   out var session);
             Console.CancelKeyPress += (_, e) =>

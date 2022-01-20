@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using Microsoft.Diagnostics.Tracing.Etlx;
 
 namespace realmon.Utilities
 {
@@ -57,7 +58,7 @@ namespace realmon.Utilities
                 var s = lastGC.Data.HeapStats;
                 lock (writerLock)
                 {
-                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
+                    Console.WriteLine(PrintUtilities.LineSeparator);
                     Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastGC.Time, t.Number, t.Generation);
                     Console.WriteLine("  Heaps: {0:N0}", t.HeapCount);
                     Console.WriteLine("  Handles: {0:N0}", s.GCHandleCount);
@@ -69,8 +70,37 @@ namespace realmon.Utilities
                     Console.WriteLine("      Gen 2: {0,17:N0} Bytes", s.GenerationSize2);
                     Console.WriteLine("      Gen 3: {0,17:N0} Bytes", s.GenerationSize3);
                     Console.WriteLine("      Gen 4: {0,17:N0} Bytes", s.GenerationSize4);
-                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
+                    Console.WriteLine(PrintUtilities.LineSeparator);
                 }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task PrintCallStack(TraceCallStack callstack, string eventName)
+        {
+            lock (writerLock)
+            {
+                Console.WriteLine(PrintUtilities.LineSeparator);
+                Console.WriteLine($"CallStack For {eventName}:");
+                while (callstack != null)
+                {
+                    var codeAddress = callstack.CodeAddress;
+
+                    // Like WinDbg, display unresolved modules with the address in Hex form.
+                    if (codeAddress.ModuleFile == null)
+                    {
+                        Console.WriteLine("0x{0:x}", codeAddress.Address);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{codeAddress.ModuleName}!{codeAddress.FullMethodName}");
+                    }
+
+                    callstack = callstack.Caller;
+                }
+
+                Console.WriteLine(PrintUtilities.LineSeparator);
             }
 
             return Task.CompletedTask;
