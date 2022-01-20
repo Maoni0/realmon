@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
+using CommandLine;
+using CommandLine.Text;
 using Microsoft.Diagnostics.Tracing.Analysis;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using CommandLine;
 using realmon.Configuration;
 using realmon.Utilities;
-using CommandLine.Text;
 
 namespace realmon
 {
@@ -32,7 +31,7 @@ namespace realmon
             [Option(shortName: 'c',
                     longName: "configPath",
                     Required = false,
-HelpText = "The path to the YAML columns configuration file used during the session. If no path is specified, the default configuration is overwritten by the selected column in the prompt.")]
+                    HelpText = "The path to the YAML columns configuration file used during the session. If no path is specified, the default configuration is overwritten by the selected column in the prompt.")]
             public string PathToConfigurationFile { get; set; } = null;
 
             [Option(shortName: 'g',
@@ -54,25 +53,21 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             public bool HelpAsked { get; set; } = false;
         }
 
-        static Timer heapStatsTimer;
-        static DateTime lastGCTime;
-        static TraceGC lastGC;
-        static object writerLock = new object();
+        static CapturedGCEvent lastGC;
 
-        public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration)
+        public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration, IConsoleOut consoleOut)
         {
             Console.WriteLine();
             Process process = Process.GetProcessById(pid);
             double? minDurationForGCPausesInMSec = null;
-            if (configuration.DisplayConditions != null && 
+            if (configuration.DisplayConditions != null &&
                 configuration.DisplayConditions.TryGetValue("min gc duration (msec)", out var minDuration))
             {
                 minDurationForGCPausesInMSec = double.Parse(minDuration);
             }
 
-            Console.WriteLine($"Monitoring process with name: {process.ProcessName} and pid: {pid}");
-            Console.WriteLine(PrintUtilities.GetHeader(configuration));
-            Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
+            consoleOut.WriteProcessInfo(process.ProcessName, pid);
+            consoleOut.WriteTableHeaders();
 
             var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(configuration: configuration, 
                                                                                   processId: pid, 
@@ -86,9 +81,11 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                 Environment.Exit(0);
             };
 
-            // this thread is responsible for listening to user input on the console and dispose the session accordingly
-            Thread monitorThread = new Thread(() => HandleConsoleInput(session)) ;
-            monitorThread.Start();
+            if (!Console.IsInputRedirected)
+            {
+                // this thread is responsible for listening to user input on the console and dispose the session accordingly
+                Task.Run(async () => await HandleConsoleInputAsync(session, consoleOut));
+            }
 
             source.NeedLoadedDotNetRuntimes();
             source.AddCallbackOnProcessStart(delegate (TraceProcess proc)
@@ -103,12 +100,15 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                             if (!minDurationForGCPausesInMSec.HasValue ||
                                 (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                             {
-                                lastGCTime = DateTime.UtcNow;
-                                lastGC = gc;
+                                CapturedGCEvent currentGCEvent = new CapturedGCEvent
+                                {
+                                    Time = DateTime.UtcNow,
+                                    Data = gc
+                                };
 
-                                lock (writerLock) {
-                                    Console.WriteLine(PrintUtilities.GetRowDetails(gc, configuration));
-                                }
+                                lastGC = currentGCEvent;
+
+                                consoleOut.WriteRow(gc);
                             }
                         }
                     };
@@ -119,7 +119,7 @@ HelpText = "The path to the YAML columns configuration file used during the sess
             source.Process();
         }
 
-        private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration)
+        private static void SetupHeapStatsTimerIfEnabled(Configuration.Configuration configuration, IConsoleOut consoleOut)
         {
             if (configuration.StatsMode == null)
             {
@@ -141,57 +141,28 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                 _ => throw new NotImplementedException()
             };
 
-            TimerCallback timerCallback = (_) =>
-            {
-                if (lastGC != null)
-                {
-                    PrintLastStats();
-                }
-            };
-
             // If ``stats_mode`` is enabled, the lifetime of this timer should be that of the process.
-            heapStatsTimer = new Timer(callback: timerCallback,
-                                       dueTime: 0,
-                                       state: null,
-                                       period: period);
-        }
-
-        private static void PrintLastStats()
-        {
-            if (lastGC == null)
+            _ = Task.Run(async () =>
             {
-                Console.WriteLine("No stats collected yet.");
-            }
-            else
-            {
-                var t = lastGC; // capture, since this could tear
-                var s = t.HeapStats;
-                lock (writerLock)
+                while (true)
                 {
-                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
-                    Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastGCTime, t.Number, t.Generation);
-                    Console.WriteLine("  Heaps: {0:N0}", t.HeapCount);
-                    Console.WriteLine("  Handles: {0:N0}", s.GCHandleCount);
-                    Console.WriteLine("  Pinned Obj Count: {0:N0}", s.PinnedObjectCount);
-                    Console.WriteLine("  Last Run Stats:");
-                    Console.WriteLine("    Total Heap: {0:N0} Bytes", s.TotalHeapSize);
-                    Console.WriteLine("      Gen 0: {0,17:N0} Bytes", s.GenerationSize0);
-                    Console.WriteLine("      Gen 1: {0,17:N0} Bytes", s.GenerationSize1);
-                    Console.WriteLine("      Gen 2: {0,17:N0} Bytes", s.GenerationSize2);
-                    Console.WriteLine("      Gen 3: {0,17:N0} Bytes", s.GenerationSize3);
-                    Console.WriteLine("      Gen 4: {0,17:N0} Bytes", s.GenerationSize4);
-                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
+                    if (lastGC != null)
+                    {
+                        await consoleOut.PrintLastStatsAsync(lastGC);
+                    }
+
+                    await Task.Delay(period);
                 }
-            }
+            });
         }
 
-        static void HandleConsoleInput(IDisposable session)
+        static async Task HandleConsoleInputAsync(IDisposable session, IConsoleOut consoleOut)
         {
             var k = Console.ReadKey(true);
 
             while (k.Key == ConsoleKey.S)
             {
-                PrintLastStats();
+                await consoleOut.PrintLastStatsAsync(lastGC);
                 k = Console.ReadKey(true);
             }
             session.Dispose();
@@ -260,7 +231,7 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                 await result.MapResult(async options =>
                   {
                       // If help is asked for / no command line args are specified or The process id / process name isn't specified, display the help text. 
-                      if (args.Length == 0) 
+                      if (args.Length == 0)
                       {
                           DisplayHelp(result, true);
                           return;
@@ -273,13 +244,14 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                       }
 
                       var configuration = await GetConfiguration(options);
+                      IConsoleOut consoleOut = ConsoleOutFactory.Create(configuration);
 
                       if (options.ProcessId == -1 && string.IsNullOrEmpty(options.ProcessName))
                       {
                           // If no process details are provided _but_ if the user provides -c without args or -g <path>, don't display help.
                           if (!string.IsNullOrWhiteSpace(options.PathToNewConfigurationFile) || // User passed: -g <path> 
-                              string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0 // User passed -c without a path.
-                             )
+                          string.CompareOrdinal(options.PathToConfigurationFile, CommandLineUtilities.SentinelPath) == 0 // User passed -c without a path.
+                         )
                           {
                               return;
                           }
@@ -304,10 +276,13 @@ HelpText = "The path to the YAML columns configuration file used during the sess
                           options.ProcessId = processes[0].Id;
                       }
 
-                      Console.WriteLine("------- press s for current stats or any other key to exit -------");
+                      if (!Console.IsInputRedirected)
+                      {
+                          consoleOut.WriteStatsUsage();
+                      }
 
-                      SetupHeapStatsTimerIfEnabled(configuration);
-                      RealTimeProcessing(options.ProcessId, options, configuration);
+                      SetupHeapStatsTimerIfEnabled(configuration, consoleOut);
+                      RealTimeProcessing(options.ProcessId, options, configuration, consoleOut);
                   },
                   errors => Task.FromResult(errors)
                   );

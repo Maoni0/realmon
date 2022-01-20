@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using realmon.Configuration;
+using realmon.Configuration.Theme;
 using System;
 using System.Collections.Generic;
 
@@ -25,7 +26,7 @@ namespace realmon.UnitTests
             Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
             validate.Should().Throw<ArgumentNullException>();
         }
-        
+
         [TestMethod]
         public void ValidateConfiguration_AvailableColumnsAreNull_ShouldThrowArgumentNullException()
         {
@@ -39,7 +40,7 @@ namespace realmon.UnitTests
         public void ValidateConfiguration_ColumnIsNotRegistered_ShouldThrowKeyNotFoundException()
         {
             Configuration.Configuration configuration = new Configuration.Configuration();
-            configuration.Columns = new List<string> { "unregisted"};
+            configuration.Columns = new List<string> { "unregisted" };
             configuration.AvailableColumns = new List<string>();
             Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
             validate.Should().Throw<KeyNotFoundException>();
@@ -168,6 +169,33 @@ namespace realmon.UnitTests
             validate.Should().NotThrow<ArgumentException>();
             validate.Should().NotThrow<ArgumentNullException>();
             validate.Should().NotThrow<KeyNotFoundException>();
+        }
+
+        [TestMethod]
+        public void ValidateConfiguration_ThemeIncorrectStyle_ShouldThrowArgumentException()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.Theme = new CustomTheme
+            {
+                GCTableHeaderColor = "sdkjflksdfj"
+            };
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().Throw<ArgumentException>();
+        }
+
+        [TestMethod]
+        public void ValidateConfiguration_ThemeWithAllNulls_ShouldNotThrow()
+        {
+            Configuration.Configuration configuration = new Configuration.Configuration();
+            configuration.Columns = new List<string> { "index", "gen" };
+            configuration.AvailableColumns = new List<string> { "gen", "index" };
+            configuration.Theme = new CustomTheme();
+
+            Action validate = () => ConfigurationReader.ValidateConfiguration(configuration);
+            validate.Should().NotThrow();
         }
     }
 }
