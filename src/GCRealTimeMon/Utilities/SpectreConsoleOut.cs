@@ -31,6 +31,14 @@
             WriteRule($"[{ThemeConfig.Current.MessageColor}]Monitoring process with name: [{ThemeConfig.Current.HighlightColor}]{processName}[/] and pid: [{ThemeConfig.Current.HighlightColor}]{pid}[/][/]");
         }
 
+        /// <summary>
+        /// Writes a horizontal rule line to the console.
+        /// </summary>
+        public void WriteLineSeparator()
+        {
+            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(ThemeConfig.Current.MessageColor)));
+        }
+
         public void WriteTableHeaders() => liveOutputTable.Start();
 
         public void WriteRow(TraceGC gc) => liveOutputTable.WriteRow(gc);
@@ -42,14 +50,6 @@
         public void WriteRule(string ruleMessage)
         {
             AnsiConsole.Write(new Rule(ruleMessage).RuleStyle(Style.Parse(ThemeConfig.Current.MessageColor)));
-        }
-
-        /// <summary>
-        /// Writes a horizontal rule line to the console.
-        /// </summary>
-        public void WriteRule()
-        {
-            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(ThemeConfig.Current.MessageColor)));
         }
 
         /// <summary>
@@ -71,7 +71,7 @@
             }
             else
             {
-                WriteRule();
+                WriteLineSeparator();
                 GCHeapStats heapStats = lastGC.Data.HeapStats;
 
                 Table table = new Table().HideHeaders();
@@ -111,7 +111,7 @@
                      .Header(ThemeConfig.ToMessage("Last Run Stats:")));
 
                 AnsiConsole.Write(table);
-                WriteRule();
+                WriteLineSeparator();
             }
 
             liveOutputTable.Start();
@@ -126,7 +126,8 @@
         {
             await liveOutputTable.StopAsync();
 
-            WriteRule();
+            WriteLineSeparator();
+
 
             Tree rootOfCallStack = new Tree($"[{ThemeConfig.Current.GCTableHeaderColor}]CallStack for: {eventName}:[/]");
             while (callstack != null)
@@ -147,7 +148,7 @@
                 callstack = callstack.Caller;
             }
             AnsiConsole.Write(rootOfCallStack);
-            WriteRule();
+            WriteLineSeparator();
 
             liveOutputTable.Start();
         }

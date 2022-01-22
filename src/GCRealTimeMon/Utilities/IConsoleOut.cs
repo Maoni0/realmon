@@ -11,6 +11,7 @@ namespace realmon.Utilities
     internal interface IConsoleOut
     {
         void WriteProcessInfo(string processName, int pid);
+        void WriteLineSeparator();
         void WriteRow(TraceGC gc);
         void WriteTableHeaders();
         Task PrintLastStatsAsync(CapturedGCEvent lastGC);
