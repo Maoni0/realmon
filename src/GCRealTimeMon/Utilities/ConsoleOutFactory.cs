@@ -7,6 +7,9 @@ namespace realmon.Utilities
 
     internal static class ConsoleOutFactory
     {
+        internal static bool IsPlainTextUsed(Configuration configuration) 
+            => Console.IsOutputRedirected || configuration.Theme?.UsePlainText == true;
+
         internal static IConsoleOut Create(Configuration configuration)
         {
             if (Console.IsOutputRedirected || configuration.Theme?.UsePlainText == true)

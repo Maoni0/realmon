@@ -1,6 +1,7 @@
 ﻿namespace realmon.Utilities
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Diagnostics.Tracing.Analysis.GC;
     using Microsoft.Diagnostics.Tracing.Etlx;
@@ -149,6 +150,14 @@
             WriteRule();
 
             liveOutputTable.Start();
+        }
+
+        public int WritePromptForMultipleProcessesAndReturnChosenProcessId(string promptTitle, IEnumerable<string> processChoices)
+        {
+            SelectionPrompt<string> selectionPrompt = new SelectionPrompt<string> { Title = promptTitle };
+            selectionPrompt.AddChoices<string>(processChoices);
+            string processIdAsString = selectionPrompt.Show(AnsiConsole.Console);
+            return PrintUtilities.ParseProcessIdFromMultiProcessPrompt(processIdAsString);
         }
     }
 }

@@ -113,13 +113,13 @@ Currently, the available columns are:
 
 In an effort to aid with perf diagnosis, call stacks are currently available for induced GCs and large object allocations on Windows, only. Enabling call stacks requires the process to run with administrator privileges.
 
+__NOTE:__ There might be a significant overhead when requesting stacks as more [providers](src/GCRealTimeMon/CallStackResolution/CallStackManager.cs#35) are enabled to retrieve call stacks and resolve symbols for the requested call stacks.
+
 ### Troubleshooting
 
 #### Symbols aren't properly resolved
 
-The symbol resolution logic relies on the fact that _NT_SYMBOL_PATH is populated with the appropriate symbol path(s). More details on how this can be troubleshooted [here](https://docs.microsoft.com/en-us/visualstudio/profiling/how-to-specify-symbol-file-locations-from-the-command-line?view=vs-2017).
-
-An example of the _NT_SYMBOL_PATH is:
+The symbol resolution logic relies on the fact that _NT_SYMBOL_PATH is populated with the appropriate symbol path(s). More details on how this can be troubleshooted [here](https://docs.microsoft.com/en-us/visualstudio/profiling/how-to-specify-symbol-file-locations-from-the-command-line?view=vs-2017). If the _NT_SYMBOL_PATH environment variable isn't set, the symbol path will default to the following to ensure symbols are resolved:
 ``;SRV*C:\Symbols*https://msdl.microsoft.com/download/symbols;SRV*C:\Symbols*https://nuget.smbsrc.net;SRV*C:\Symbols*https://referencesource.microsoft.com/symbols``
 
 #### Getting the following exception: ``Unhandled exception. System.Runtime.InteropServices.COMException (0x800705AA): Insufficient system resources exist to complete the requested service. (0x800705AA)`` 

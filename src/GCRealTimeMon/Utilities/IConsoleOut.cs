@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
 using Microsoft.Diagnostics.Tracing.Etlx;
 
@@ -15,5 +16,6 @@ namespace realmon.Utilities
         Task PrintLastStatsAsync(CapturedGCEvent lastGC);
         Task PrintCallStack(TraceCallStack callstack, string eventName);
         void WriteStatsUsage();
+        int WritePromptForMultipleProcessesAndReturnChosenProcessId(string promptTitle, IEnumerable<string> processChoices);
     }
 }
