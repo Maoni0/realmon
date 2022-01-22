@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using Sharprompt;
 
 namespace realmon.Utilities
 {
@@ -74,6 +76,12 @@ namespace realmon.Utilities
             }
 
             return Task.CompletedTask;
+        }
+
+        public int WritePromptForMultipleProcessesAndReturnChosenProcessId(string promptTitle, IEnumerable<string> processChoices)
+        {
+            string selectedProcess = Prompt.Select(promptTitle, processChoices);
+            return PrintUtilities.ParseProcessIdFromMultiProcessPrompt(selectedProcess);
         }
     }
 }

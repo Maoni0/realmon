@@ -259,12 +259,16 @@ namespace realmon
                               throw new ArgumentException($"No Processes found with name: {options.ProcessName}");
                           }
 
-                          if (processes.Length != 1)
+                          // If multiple processes are found, prompt the user to select one by displaying the PID.
+                          if (processes.Length > 1)
                           {
-                              throw new ArgumentException($"Several processes with name: '{options.ProcessName}' have been found.");
+                              options.ProcessId = CommandLineUtilities.GetProcessIdIfThereAreMultipleProcesses(processes, consoleOut);
                           }
 
-                          options.ProcessId = processes[0].Id;
+                          else
+                          {
+                              options.ProcessId = processes[0].Id;
+                          }
                       }
 
                       if (!Console.IsInputRedirected)

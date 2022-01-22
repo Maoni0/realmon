@@ -186,5 +186,11 @@ namespace realmon.Utilities
 
             throw new ArgumentException($"Column Name: {columnName} not registered in the ColumnInfoMap.");
         }
+
+        public static int ParseProcessIdFromMultiProcessPrompt(string processDetailsChosenFromMultiProcessPrompt)
+        {
+            string pidAsString = processDetailsChosenFromMultiProcessPrompt.Split('|')[0].Split(':')[1].Trim();
+            return int.Parse(pidAsString);
+        }
     }
 }
