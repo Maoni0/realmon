@@ -8,7 +8,7 @@ namespace realmon.Utilities
 {
     internal static class PrintUtilities
     {
-        public const string HeapStatsLineSeparator = "------------------------------------------------------------------------------";
+        public const string LineSeparator = "------------------------------------------------------------------------------";
 
         /// <summary>
         /// Gets the header of the monitor table based on the configuration.

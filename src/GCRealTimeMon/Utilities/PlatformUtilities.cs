@@ -35,12 +35,28 @@ namespace realmon.Utilities
             }
         }
 
-        public static TraceEventDispatcher GetTraceEventDispatcherBasedOnPlatform(int processId, out IDisposable session)
+        public static TraceEventDispatcher GetTraceEventDispatcherBasedOnPlatform(int processId, 
+                                                                                  IConsoleOut consoleOut,
+                                                                                  bool enableCallStacks,
+                                                                                  out IDisposable session)
         {
             if (IsWindows)
             {
                 var traceEventSession = new TraceEventSession($"GCRealMonSession_{Guid.NewGuid()}");
-                traceEventSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Informational, (ulong)ClrTraceEventParser.Keywords.GC);
+
+                // If the user requested call stacks, enable them via the CallStackManager.
+                if (enableCallStacks)
+                {
+                    CallStackResolution.CallStackManager.InitializeAndRegisterCallStacks(traceEventSession: traceEventSession,
+                                                                                         consoleOut: consoleOut,
+                                                                                         processId: processId);
+                }
+
+                else
+                {
+                    traceEventSession.EnableProvider(ClrTraceEventParser.ProviderGuid, TraceEventLevel.Informational, (ulong)ClrTraceEventParser.Keywords.GC);
+                }
+
                 session = traceEventSession;
                 return traceEventSession.Source;
             }

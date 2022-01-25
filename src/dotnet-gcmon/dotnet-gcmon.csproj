@@ -48,6 +48,7 @@
     <Compile Include="..\GCRealTimeMon\Utilities\PrintUtilities.cs" Link="Utilities\PrintUtilities.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\SpectreConsoleOut.cs" Link="SpectreConsoleOut.cs" />
     <Compile Include="..\GCRealTimeMon\Utilities\CommandLineUtilities.cs" Link="Utilities\CommandLineUtilities.cs" />
+    <Compile Include="..\GCRealTimeMon\CallStackResolution\CallStackManager.cs" Link="CallStackResolution\CallStackManager.cs" />
   </ItemGroup>
 
   <!--add LICENCE.txt file to the package (PackageLicenceUlr no more supported)-->

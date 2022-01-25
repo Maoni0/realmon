@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Diagnostics.Tracing.Analysis.GC;
+    using Microsoft.Diagnostics.Tracing.Etlx;
     using realmon.Configuration;
     using realmon.Configuration.Theme;
     using Spectre.Console;
@@ -30,6 +31,14 @@
             WriteRule($"[{ThemeConfig.Current.MessageColor}]Monitoring process with name: [{ThemeConfig.Current.HighlightColor}]{processName}[/] and pid: [{ThemeConfig.Current.HighlightColor}]{pid}[/][/]");
         }
 
+        /// <summary>
+        /// Writes a horizontal rule line to the console.
+        /// </summary>
+        public void WriteLineSeparator()
+        {
+            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(ThemeConfig.Current.MessageColor)));
+        }
+
         public void WriteTableHeaders() => liveOutputTable.Start();
 
         public void WriteRow(TraceGC gc) => liveOutputTable.WriteRow(gc);
@@ -44,25 +53,12 @@
         }
 
         /// <summary>
-        /// Writes a horizontal rule line to the console.
-        /// </summary>
-        public void WriteRule()
-        {
-            AnsiConsole.Write(new Rule().RuleStyle(Style.Parse(ThemeConfig.Current.MessageColor)));
-        }
-
-        /// <summary>
         /// Writes a warning message to the console.
         /// </summary>
         /// <param name="warningMessage">The message to write.</param>
         public void WriteWarning(string warningMessage)
         {
             AnsiConsole.MarkupLine(ThemeConfig.ToWarning(warningMessage));
-        }
-
-        public void PrintLastSatats(TraceGC traceGC, GCHeapStats heapStats)
-        {
-
         }
 
         public async Task PrintLastStatsAsync(CapturedGCEvent lastGC)
@@ -75,7 +71,7 @@
             }
             else
             {
-                WriteRule();
+                WriteLineSeparator();
                 GCHeapStats heapStats = lastGC.Data.HeapStats;
 
                 Table table = new Table().HideHeaders();
@@ -115,7 +111,7 @@
                      .Header(ThemeConfig.ToMessage("Last Run Stats:")));
 
                 AnsiConsole.Write(table);
-                WriteRule();
+                WriteLineSeparator();
             }
 
             liveOutputTable.Start();
@@ -124,6 +120,37 @@
         public void WriteStatsUsage()
         {
             WriteRule($"[{ThemeConfig.Current.MessageColor}]press [{ThemeConfig.Current.HighlightColor}]s[/] for current stats or any other key to exit[/]");
+        }
+
+        public async Task PrintCallStack(TraceCallStack callstack, string eventName)
+        {
+            await liveOutputTable.StopAsync();
+
+            WriteLineSeparator();
+
+
+            Tree rootOfCallStack = new Tree($"[{ThemeConfig.Current.GCTableHeaderColor}]CallStack for: {eventName}:[/]");
+            while (callstack != null)
+            {
+                var codeAddress = callstack.CodeAddress;
+
+                // Like WinDbg, display unresolved modules with the address in Hex form.
+                if (codeAddress.ModuleFile == null)
+                {
+                    rootOfCallStack.AddNode($"[{ThemeConfig.Current.MessageColor}] 0x{codeAddress.Address.ToString("x").RemoveMarkup()}[/]");
+                }
+                else
+                {
+                    string resolvedFrame = $"[{ThemeConfig.Current.MessageColor}]{codeAddress.ModuleName}!{codeAddress.FullMethodName}[/]";
+                    rootOfCallStack.AddNode(resolvedFrame.RemoveMarkup());
+                }
+
+                callstack = callstack.Caller;
+            }
+            AnsiConsole.Write(rootOfCallStack);
+            WriteLineSeparator();
+
+            liveOutputTable.Start();
         }
 
         public int WritePromptForMultipleProcessesAndReturnChosenProcessId(string promptTitle, IEnumerable<string> processChoices)

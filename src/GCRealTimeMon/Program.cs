@@ -40,6 +40,12 @@ namespace realmon
                     HelpText = "The path of the YAML configuration file to be generated based on the colums selection available in the command prompt.")]
             public string PathToNewConfigurationFile { get; set; } = null;
 
+            [Option(shortName: 's',
+                    longName: "callStacks",
+                    Required = false,
+                    HelpText = "Setting this option will enable call stacks for induced GCs and large object allocations. Getting call stacks will currently only work for Windows and the session must have admin privileges.")]
+            public bool EnableCallStacks { get; set; } = false;
+
             [Option(shortName: '?',
                     longName: "\\?",
                     Required = false,
@@ -63,7 +69,10 @@ namespace realmon
             consoleOut.WriteProcessInfo(process.ProcessName, pid);
             consoleOut.WriteTableHeaders();
 
-            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(pid, out var session);
+            var source = PlatformUtilities.GetTraceEventDispatcherBasedOnPlatform(processId: pid, 
+                                                                                  consoleOut: consoleOut,
+                                                                                  enableCallStacks: options.EnableCallStacks,
+                                                                                  out var session);
             Console.CancelKeyPress += (_, e) =>
             {
                 // Dispose the session.

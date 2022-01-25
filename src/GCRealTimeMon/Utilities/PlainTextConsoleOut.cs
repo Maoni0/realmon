@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using Microsoft.Diagnostics.Tracing.Etlx;
 using Sharprompt;
 
 namespace realmon.Utilities
@@ -33,6 +34,11 @@ namespace realmon.Utilities
             Console.WriteLine($"Monitoring process with name: {processName} and pid: {pid}");
         }
 
+        public void WriteLineSeparator()
+        {
+            Console.WriteLine(PrintUtilities.LineSeparator);
+        }
+
         public void WriteRow(TraceGC gc)
         {
             lock (writerLock)
@@ -44,7 +50,7 @@ namespace realmon.Utilities
         public void WriteTableHeaders()
         {
             Console.WriteLine(PrintUtilities.GetHeader(configuration));
-            Console.WriteLine(PrintUtilities.GetLineSeparator(configuration));
+            WriteLineSeparator();
         }
 
         public Task PrintLastStatsAsync(CapturedGCEvent lastGC)
@@ -59,7 +65,7 @@ namespace realmon.Utilities
                 var s = lastGC.Data.HeapStats;
                 lock (writerLock)
                 {
-                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
+                    WriteLineSeparator();
                     Console.WriteLine("Heap Stats as of {0:u} (Run {1} for gen {2}):", lastGC.Time, t.Number, t.Generation);
                     Console.WriteLine("  Heaps: {0:N0}", t.HeapCount);
                     Console.WriteLine("  Handles: {0:N0}", s.GCHandleCount);
@@ -71,8 +77,37 @@ namespace realmon.Utilities
                     Console.WriteLine("      Gen 2: {0,17:N0} Bytes", s.GenerationSize2);
                     Console.WriteLine("      Gen 3: {0,17:N0} Bytes", s.GenerationSize3);
                     Console.WriteLine("      Gen 4: {0,17:N0} Bytes", s.GenerationSize4);
-                    Console.WriteLine(PrintUtilities.HeapStatsLineSeparator);
+                    WriteLineSeparator();
                 }
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task PrintCallStack(TraceCallStack callstack, string eventName)
+        {
+            lock (writerLock)
+            {
+                WriteLineSeparator();
+                Console.WriteLine($"CallStack For {eventName}:");
+                while (callstack != null)
+                {
+                    var codeAddress = callstack.CodeAddress;
+
+                    // Like WinDbg, display unresolved modules with the address in Hex form.
+                    if (codeAddress.ModuleFile == null)
+                    {
+                        Console.WriteLine("0x{0:x}", codeAddress.Address);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{codeAddress.ModuleName}!{codeAddress.FullMethodName}");
+                    }
+
+                    callstack = callstack.Caller;
+                }
+
+                WriteLineSeparator();
             }
 
             return Task.CompletedTask;
