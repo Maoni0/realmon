@@ -108,6 +108,7 @@ Currently, the available columns are:
 | LOH frag ratio         | The % of fragmentation on the large object heap (LOH) at the end of this GC.                                                                                                     | `TraceGC.GenFragmentationPercent(Gens.LargeObj)`                                          |
 | finalize promoted (mb) | The size of finalizable objects that were discovered to be dead and so promoted during this GC, in MB.                                                                           | `TraceGC.HeapStats.FinalizationPromotedSize / 1000000.0`                                  |
 | pinned objects         | Number of pinned objects observed in this GC.                                                                                                                                    | `TraceGC.HeapStats.PinnedObjectCount`                                                     |
+| accumulated gc pause % | The percentage of accumulative time spent in GC Pauses since the start of the monitoring.                                                                                                                          | CumulativeSum(`TraceGC.PauseDurationMSec`) / Total Elapsed Time Since Start of Monitoring * 100%                                                     |
 
 ## Call Stacks
 
@@ -142,7 +143,7 @@ The process to add a new column from the ``TraceGC`` event is the following:
 2. Define a ``ColumnInfo`` object in the ``ColumnInfoMap`` with the following properties:
    1. The name
    2. Alignment
-   3. A ``Func<TraceGC, object>`` that looks up an object in via a ``TraceGC`` event.
+   3. A ``Func<CapturedGCEvent, object>`` that contains a ``TraceGC`` event with the relevant GC information. 
    4. Format (optional)
 3. Optionally add corresponding unit tests.
 4. Update the documentation here with the new column.

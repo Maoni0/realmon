@@ -39,7 +39,7 @@ namespace realmon.Utilities
             Console.WriteLine(PrintUtilities.LineSeparator);
         }
 
-        public void WriteRow(TraceGC gc)
+        public void WriteRow(CapturedGCEvent gc)
         {
             lock (writerLock)
             {

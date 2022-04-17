@@ -12,7 +12,7 @@ namespace realmon.Utilities
     {
         void WriteProcessInfo(string processName, int pid);
         void WriteLineSeparator();
-        void WriteRow(TraceGC gc);
+        void WriteRow(CapturedGCEvent gc);
         void WriteTableHeaders();
         Task PrintLastStatsAsync(CapturedGCEvent lastGC);
         Task PrintCallStack(TraceCallStack callstack, string eventName);

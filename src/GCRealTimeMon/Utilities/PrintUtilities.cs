@@ -103,16 +103,16 @@ namespace realmon.Utilities
         /// <param name="traceEvent"></param>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static string GetRowDetails(TraceGC traceEvent, Configuration.Configuration configuration)
+        public static string GetRowDetails(CapturedGCEvent capturedGCEvent, Configuration.Configuration configuration)
         {
             StringBuilder stringBuilder = new StringBuilder();
             // Add the `index` column.
-            stringBuilder.Append($"GC#{FormatBasedOnColumnAndGCEvent(traceEvent, "index")} |");
+            stringBuilder.Append($"GC#{FormatBasedOnColumnAndGCEvent(capturedGCEvent, "index")} |");
 
             // Iterate through all columns in the config.
             foreach (var columnName in configuration.Columns)
             {
-                stringBuilder.Append($" {FormatBasedOnColumnAndGCEvent(traceEvent, columnName)} |");
+                stringBuilder.Append($" {FormatBasedOnColumnAndGCEvent(capturedGCEvent, columnName)} |");
             }
 
             return stringBuilder.ToString();
@@ -124,7 +124,7 @@ namespace realmon.Utilities
         /// <param name="traceEvent"></param>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static List<string> GetRowDetailsList(TraceGC traceEvent, Configuration.Configuration configuration)
+        public static List<string> GetRowDetailsList(CapturedGCEvent traceEvent, Configuration.Configuration configuration)
         {
             List<string> rowDetails = new List<string>();
             // Add the `index` column.
@@ -146,13 +146,13 @@ namespace realmon.Utilities
         /// <param name="columnName"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static string FormatBasedOnColumnAndGCEvent(TraceGC traceEvent, string columnName)
+        public static string FormatBasedOnColumnAndGCEvent(CapturedGCEvent capturedGCEvent, string columnName)
         {
             if (ColumnInfoMap.Map.TryGetValue(columnName, out var columnInfo))
             {
                 // Full Format: {index, alignment: format}
                 string format = "{0," + columnInfo.Alignment + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}";
-                string formattedString = string.Format(format, columnInfo.GetColumnValueFromEvent(traceEvent));
+                string formattedString = string.Format(format, columnInfo.GetColumnValueFromEvent(capturedGCEvent));
                 return formattedString;
             }
 
@@ -166,9 +166,9 @@ namespace realmon.Utilities
         /// <param name="columnName"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static string FormatThemeBasedOnColumnAndGCEvent(TraceGC traceEvent, string columnName)
+        public static string FormatThemeBasedOnColumnAndGCEvent(CapturedGCEvent gcEvent, string columnName)
         {
-            string color = traceEvent.Generation switch
+            string color = gcEvent.Data.Generation switch
             {
                 0 => $"[{ThemeConfig.Current.Gen0RowColor}]",
                 1 => $"[{ThemeConfig.Current.Gen1RowColor}]",
@@ -180,7 +180,7 @@ namespace realmon.Utilities
             {
                 // No alignment here as that is taken care of by the table formatting
                 string format = $"{color}{{0" + (string.IsNullOrEmpty(columnInfo.Format) ? string.Empty : $":{columnInfo.Format}") + "}[/]";
-                string formattedString = string.Format(format, columnInfo.GetColumnValueFromEvent(traceEvent));
+                string formattedString = string.Format(format, columnInfo.GetColumnValueFromEvent(gcEvent));
                 return formattedString;
             }
 

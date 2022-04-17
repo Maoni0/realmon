@@ -58,6 +58,9 @@ namespace realmon
         public static void RealTimeProcessing(int pid, Options options, Configuration.Configuration configuration, IConsoleOut consoleOut)
         {
             Console.WriteLine();
+            DateTime startTime = DateTime.UtcNow;
+            double cumulativePauseTimeMSec = 0;
+
             Process process = Process.GetProcessById(pid);
             double? minDurationForGCPausesInMSec = null;
             if (configuration.DisplayConditions != null &&
@@ -100,15 +103,19 @@ namespace realmon
                             if (!minDurationForGCPausesInMSec.HasValue ||
                                 (minDurationForGCPausesInMSec.HasValue && minDurationForGCPausesInMSec.Value < gc.PauseDurationMSec))
                             {
+                                cumulativePauseTimeMSec += gc.PauseDurationMSec;
+                                var time = DateTime.UtcNow;
                                 CapturedGCEvent currentGCEvent = new CapturedGCEvent
                                 {
-                                    Time = DateTime.UtcNow,
-                                    Data = gc
+                                    Time = time,
+                                    Data = gc,
+                                    CumulativePauseTimeMSec = cumulativePauseTimeMSec,
+                                    CumulativeProcessMonitoringTimeMSec = (time - startTime).TotalMilliseconds,
                                 };
 
                                 lastGC = currentGCEvent;
 
-                                consoleOut.WriteRow(gc);
+                                consoleOut.WriteRow(currentGCEvent);
                             }
                         }
                     };

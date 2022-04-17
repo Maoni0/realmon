@@ -8,5 +8,7 @@ namespace realmon.Utilities
     {
         public DateTime Time { get; set; }
         public TraceGC Data { get; set; }
+        public double CumulativePauseTimeMSec { get; set; }
+        public double CumulativeProcessMonitoringTimeMSec { get; set; }
     }
 }

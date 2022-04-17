@@ -41,7 +41,7 @@
 
         public void WriteTableHeaders() => liveOutputTable.Start();
 
-        public void WriteRow(TraceGC gc) => liveOutputTable.WriteRow(gc);
+        public void WriteRow(CapturedGCEvent gc) => liveOutputTable.WriteRow(gc);
 
         /// <summary>
         /// Writes a horizontal rule line with a message in the center to the console.
@@ -160,5 +160,6 @@
             string processIdAsString = selectionPrompt.Show(AnsiConsole.Console);
             return PrintUtilities.ParseProcessIdFromMultiProcessPrompt(processIdAsString);
         }
+
     }
 }

@@ -9,6 +9,7 @@
     - LOH size (mb) 
     - peak/after
     - gen2 size (mb)
+    - accumulated gc pause %
 
 available_columns:
     # all columns available to be displayed.
@@ -43,3 +44,4 @@ available_columns:
     # Finalized and Pinned
     - finalize promoted (mb)              # The size of finalizable objects that were discovered to be dead and so promoted during this GC, in MB. 
     - pinned objects                      # Number of pinned objects this GC promoted.
+    - accumulated gc pause %              # The percentage of accumulative time spent in GC Pauses since the start of the monitoring.
