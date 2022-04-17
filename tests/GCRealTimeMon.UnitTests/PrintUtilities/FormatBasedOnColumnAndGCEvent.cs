@@ -13,7 +13,8 @@ namespace realmon.UnitTests
         public void FormatBasedOnColumnAndGCEvent_GCIndexColumn_SuccessfullyFormatted()
         {
             TraceGC traceGC = new TraceGC(2) { Number = 1 };
-            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(traceEvent: traceGC, columnName: "index");
+            CapturedGCEvent capturedGCEvent = new CapturedGCEvent { Data = traceGC };
+            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(capturedGCEvent: capturedGCEvent, columnName: "index");
             resolvedColumn.Should().NotBeNullOrEmpty();
             resolvedColumn.Should().BeEquivalentTo("         1");
         }
@@ -22,7 +23,8 @@ namespace realmon.UnitTests
         public void FormatBasedOnColumnAndGCEvent_TypeInputColumn_SuccessfullyFormatted()
         {
             TraceGC traceGC = new TraceGC(2) { Type = Microsoft.Diagnostics.Tracing.Parsers.Clr.GCType.NonConcurrentGC };
-            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(traceEvent: traceGC, columnName: "type");
+            CapturedGCEvent capturedGCEvent = new CapturedGCEvent { Data = traceGC };
+            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(capturedGCEvent: capturedGCEvent, columnName: "type");
             resolvedColumn.Should().NotBeNullOrEmpty();
             resolvedColumn.Should().BeEquivalentTo("NonConcurrentGC");
         }
@@ -31,7 +33,8 @@ namespace realmon.UnitTests
         public void FormatBasedOnColumnAndGCEvent_GenerationColumn_SuccessfullyFormatted()
         {
             TraceGC traceGC = new TraceGC(2) { Generation = 1 };
-            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(traceEvent: traceGC, columnName: "gen");
+            CapturedGCEvent capturedGCEvent = new CapturedGCEvent { Data = traceGC };
+            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(capturedGCEvent: capturedGCEvent, columnName: "gen");
             resolvedColumn.Should().NotBeNullOrEmpty();
             resolvedColumn.Should().BeEquivalentTo("    1");
         }
@@ -40,7 +43,8 @@ namespace realmon.UnitTests
         public void FormatBasedOnColumnAndGCEvent_GCPauseColumn_SuccessfullyFormatted()
         {
             TraceGC traceGC = new TraceGC(2) { PauseDurationMSec = 100 };
-            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(traceEvent: traceGC, columnName: "pause (ms)");
+            CapturedGCEvent capturedGCEvent = new CapturedGCEvent { Data = traceGC };
+            string resolvedColumn = PrintUtilities.FormatBasedOnColumnAndGCEvent(capturedGCEvent: capturedGCEvent, columnName: "pause (ms)");
             resolvedColumn.Should().NotBeNullOrEmpty();
             resolvedColumn.Should().BeEquivalentTo("    100.00");
         }
@@ -49,7 +53,8 @@ namespace realmon.UnitTests
         public void FormatBasedOnColumnAndGCEvent_UnidentifiedColumn_UnsuccessfullyParsedWithException()
         {
             TraceGC traceGC = new TraceGC(2) { PauseDurationMSec = 100 };
-            Action resolveColumn = () => PrintUtilities.FormatBasedOnColumnAndGCEvent(traceEvent: traceGC, columnName: "unregisted");
+            CapturedGCEvent capturedGCEvent = new CapturedGCEvent { Data = traceGC };
+            Action resolveColumn = () => PrintUtilities.FormatBasedOnColumnAndGCEvent(capturedGCEvent: capturedGCEvent, columnName: "unregisted");
             resolveColumn.Should().Throw<ArgumentException>();
         }
     }

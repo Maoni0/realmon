@@ -1,5 +1,4 @@
-﻿using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using System;
+﻿using System;
 
 namespace realmon.Utilities
 {
@@ -9,7 +8,7 @@ namespace realmon.Utilities
     internal sealed class ColumnInfo
     {
         public ColumnInfo(string name,
-                          Func<TraceGC, object> getColumnValueFromEvent,
+                          Func<CapturedGCEvent, object> getColumnValueFromEvent,
                           int? alignment = null,
                           string format = "",
                           string description = "")
@@ -24,7 +23,7 @@ namespace realmon.Utilities
 
         public string Name   { get; }
         public int Alignment { get; }
-        public Func<TraceGC, object> GetColumnValueFromEvent { get; }
+        public Func<CapturedGCEvent, object> GetColumnValueFromEvent { get; }
         public string Format { get; }
         public string Description { get; }
     }

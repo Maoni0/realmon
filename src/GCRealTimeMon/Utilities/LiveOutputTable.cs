@@ -95,7 +95,7 @@ namespace realmon.Utilities
         /// </summary>
         /// <param name="gc">The trace GC data to write.</param>
         /// <returns>A task indicating completion.</returns>
-        public void WriteRow(TraceGC gc)
+        public void WriteRow(CapturedGCEvent gc)
         {
             List<string> rowDetails = PrintUtilities.GetRowDetailsList(gc, this.configuration);
             bool wasWritten = channel.Writer.TryWrite(rowDetails);

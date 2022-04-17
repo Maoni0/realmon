@@ -21,10 +21,12 @@ namespace realmon.UnitTests
                 Reason = Microsoft.Diagnostics.Tracing.Parsers.Clr.GCReason.AllocSmall
             };
 
+            CapturedGCEvent capturedGCEvent = new CapturedGCEvent { Data = traceEvent };
+
             Configuration.Configuration configuration = new Configuration.Configuration();
             configuration.Columns = new List<string> { "type", "gen", "pause (ms)", "reason" };
 
-            string rowDetails = PrintUtilities.GetRowDetails(traceEvent, configuration);
+            string rowDetails = PrintUtilities.GetRowDetails(capturedGCEvent, configuration);
             rowDetails.Should().NotBeNullOrEmpty();
             rowDetails.Should().BeEquivalentTo("GC#       430 | NonConcurrentGC |     0 |       7.38 |            AllocSmall |");
         }
